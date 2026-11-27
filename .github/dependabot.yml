@@ -4,6 +4,19 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # Major upgrades deliberately pinned (see docs/decisions/0001):
+    # - typescript 6+/7: typescript-eslint supports < 6.1 only
+    # - eslint 10: eslint-plugin-jsx-a11y supports ESLint 9 at most
+    # - @types/node: must match the Node.js runtime major (24)
+    ignore:
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
+      - dependency-name: eslint
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@eslint/js'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
     groups:
       dev-dependencies:
         dependency-type: development
