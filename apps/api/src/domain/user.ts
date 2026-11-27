@@ -54,3 +54,10 @@ export function assertCanStartSession(user: UserEntity): void {
     throw new AppError('USER_INACTIVE');
   }
 }
+
+/** AUTH-30: nobody can deactivate or delete their own account (no self lock-out). */
+export function assertNotSelf(actorId: string, targetId: string): void {
+  if (actorId === targetId) {
+    throw new AppError('SELF_MODIFICATION_FORBIDDEN');
+  }
+}

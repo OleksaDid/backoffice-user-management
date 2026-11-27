@@ -7,7 +7,13 @@ import {
   type UserStatus,
 } from '@backoffice/contracts';
 
-import { endsSessions, profileChanges, statusChanges, type UserEntity } from '../domain/user.js';
+import {
+  assertNotSelf,
+  endsSessions,
+  profileChanges,
+  statusChanges,
+  type UserEntity,
+} from '../domain/user.js';
 import { AppError } from '../errors/app-error.js';
 import { isUniqueViolation } from '../repositories/errors.js';
 import type { UnitOfWork } from '../repositories/unit-of-work.js';
@@ -68,8 +74,11 @@ export class UserService {
     });
   }
 
-  /** USR-10, USR-11, USR-12 */
-  setStatus(id: string, status: UserStatus): Promise<UserEntity> {
+  /** USR-10, USR-11, USR-12, AUTH-30 (deactivating yourself is forbidden). */
+  setStatus(actorId: string, id: string, status: UserStatus): Promise<UserEntity> {
+    if (status === 'inactive') {
+      assertNotSelf(actorId, id);
+    }
     return this.uow.transaction(async ({ users, sessions }) => {
       await this.lockedUser(users, id);
       const now = this.clock();
@@ -82,8 +91,9 @@ export class UserService {
     });
   }
 
-  /** USR-13: sessions are removed by the foreign key cascade. */
-  async delete(id: string): Promise<void> {
+  /** USR-13, AUTH-30: sessions and credentials are removed by the foreign key cascade. */
+  async delete(actorId: string, id: string): Promise<void> {
+    assertNotSelf(actorId, id);
     if (!(await this.uow.repositories.users.delete(id))) {
       throw new AppError('USER_NOT_FOUND');
     }

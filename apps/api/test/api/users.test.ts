@@ -313,6 +313,28 @@ describe('users API (integration)', () => {
     expect(sessions.rowCount).toBe(0);
   });
 
+  it('AUTH-30 nobody can deactivate or delete their own account', async () => {
+    const self = ctx.admin.user.id;
+
+    const deactivate = await ctx.inject({
+      method: 'PUT',
+      url: `/api/users/${self}/status`,
+      payload: { status: 'inactive' },
+    });
+    const remove = await ctx.inject({ method: 'DELETE', url: `/api/users/${self}` });
+
+    for (const response of [deactivate, remove]) {
+      expect(response.statusCode).toBe(409);
+      expect(response.json()).toMatchObject({ code: 'SELF_MODIFICATION_FORBIDDEN' });
+    }
+    const stillActive = await ctx.inject({
+      method: 'PUT',
+      url: `/api/users/${self}/status`,
+      payload: { status: 'active' },
+    });
+    expect(stillActive.statusCode).toBe(200);
+  });
+
   it('USR-14 answers 404 for unknown and 400 for malformed ids', async () => {
     const requests = [
       {
