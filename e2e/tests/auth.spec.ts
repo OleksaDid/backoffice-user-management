@@ -11,6 +11,14 @@ test.describe('authentication @full', () => {
     await expectNoA11yViolations(page);
   });
 
+  test('buttons show the pointer cursor', async ({ page }) => {
+    await page.goto('/sign-up');
+    const cursor = await page
+      .getByRole('button', { name: 'Sign up' })
+      .evaluate((button) => getComputedStyle(button).cursor);
+    expect(cursor).toBe('pointer');
+  });
+
   test('UI-AUTH-03 sign-up and sign-in link to each other', async ({ page }) => {
     await page.goto('/sign-up');
     await page.getByRole('link', { name: 'Sign in' }).click();
