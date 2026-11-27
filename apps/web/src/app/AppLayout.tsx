@@ -21,7 +21,7 @@ export function AppLayout() {
       <AppShell.Header component="header">
         <Container size="lg" h="100%">
           <Group h="100%" justify="space-between" wrap="nowrap">
-            <Text component="span" fw={700} size="lg">
+            <Text component="span" fw={700} size="lg" style={{ whiteSpace: 'nowrap' }}>
               Back-office
             </Text>
             <Group gap="sm" wrap="nowrap">
