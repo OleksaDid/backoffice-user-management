@@ -62,32 +62,37 @@ describe('migrations (integration)', () => {
 });
 
 describe('expand/contract on existing data (integration)', () => {
-  it('DATA-02 rows from before credentials get a placeholder email, then email is required', async () => {
-    const database = await startTestDatabase({ migrate: false });
-    const folder = await migrationsUpTo('0001_user_credentials');
-    await runMigrations(database.db, folder);
-    await database.db.execute(
-      sql`insert into users (first_name, last_name) values ('Legacy', 'User')`,
-    );
-    await database.db.execute(
-      sql`insert into users (first_name, last_name, email) values ('New', 'User', 'new@example.com')`,
-    );
+  // Starts its own PostgreSQL container inside the test, so it needs more than the default.
+  it(
+    'DATA-02 rows from before credentials get a placeholder email, then email is required',
+    { timeout: 90_000 },
+    async () => {
+      const database = await startTestDatabase({ migrate: false });
+      const folder = await migrationsUpTo('0001_user_credentials');
+      await runMigrations(database.db, folder);
+      await database.db.execute(
+        sql`insert into users (first_name, last_name) values ('Legacy', 'User')`,
+      );
+      await database.db.execute(
+        sql`insert into users (first_name, last_name, email) values ('New', 'User', 'new@example.com')`,
+      );
 
-    await runMigrations(database.db);
+      await runMigrations(database.db);
 
-    const rows = await database.db.execute<{ first_name: string; email: string }>(
-      sql`select first_name, email from users order by first_name`,
-    );
-    expect(rows.rows[0]?.email).toMatch(/^legacy-[0-9a-f-]{36}@example\.invalid$/);
-    expect(rows.rows[1]?.email).toBe('new@example.com');
-    await database.stop();
-  });
+      const rows = await database.db.execute<{ first_name: string; email: string }>(
+        sql`select first_name, email from users order by first_name`,
+      );
+      expect(rows.rows[0]?.email).toMatch(/^legacy-[0-9a-f-]{36}@example\.invalid$/);
+      expect(rows.rows[1]?.email).toBe('new@example.com');
+      await database.stop();
+    },
+  );
 });
 
 describe('readiness when the database goes away (integration)', () => {
   it(
     'HLT-01 reports the database as down without crashing the process',
-    { timeout: 30_000 },
+    { timeout: 90_000 },
     async () => {
       const database = await startTestDatabase();
       const probe = createReadinessProbe(database.db);

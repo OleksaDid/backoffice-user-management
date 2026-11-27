@@ -6,14 +6,14 @@ import { PasswordHasher } from './password-hasher.js';
 const hasher = new PasswordHasher({ N: 2 ** 10, r: 8, p: 1 });
 
 describe('PasswordHasher', () => {
-  it('AUTH-11 stores a salted, self-describing hash, never the password', async () => {
+  it('AUTH-11 NFR-10 stores a salted, self-describing hash, never the password', async () => {
     const hash = await hasher.hash('correct horse');
     expect(hash).toMatch(/^scrypt\$1024\$8\$1\$[\w-]+\$[\w-]+$/);
     expect(hash).not.toContain('correct horse');
     expect(await hasher.hash('correct horse')).not.toBe(hash);
   });
 
-  it('AUTH-04 verifies the right password and rejects a wrong one', async () => {
+  it('AUTH-04 NFR-10 verifies the right password and rejects a wrong one', async () => {
     const hash = await hasher.hash('correct horse');
     expect(await hasher.verify('correct horse', hash)).toBe(true);
     expect(await hasher.verify('correct horsE', hash)).toBe(false);

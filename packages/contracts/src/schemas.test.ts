@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { paginationQuerySchema, totalPages } from './pagination.js';
+import { paginatedSchema, paginationQuerySchema, totalPages } from './pagination.js';
 import { createSessionBodySchema } from './sessions.js';
 import {
   createUserBodySchema,
+  userSchema,
   createUserFormSchema,
   updateUserProfileBodySchema,
   updateUserStatusBodySchema,
@@ -78,6 +79,13 @@ describe('pagination', () => {
     expect(paginationQuerySchema.safeParse({ page: '0' }).success).toBe(false);
     expect(paginationQuerySchema.safeParse({ pageSize: '101' }).success).toBe(false);
     expect(paginationQuerySchema.safeParse({ page: '1.5' }).success).toBe(false);
+  });
+
+  it('USR-03 describes a page of items with its totals', () => {
+    const page = paginatedSchema(userSchema);
+    const valid = { items: [], page: 1, pageSize: 6, totalItems: 0, totalPages: 0 };
+    expect(page.safeParse(valid).success).toBe(true);
+    expect(page.safeParse({ ...valid, totalItems: undefined }).success).toBe(false);
   });
 
   it('USR-06 computes total pages, 0 when empty', () => {

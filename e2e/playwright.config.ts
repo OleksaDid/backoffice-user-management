@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices, type Project } from '@playwright/test';
 
 /**
  * End-to-end tests run against a running stack: the Compose stack in CI
@@ -15,10 +15,33 @@ export default defineConfig({
     baseURL: process.env.E2E_BASE_URL ?? 'http://localhost:8080',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
-    // Optional: reuse a locally installed browser instead of Playwright's download.
-    ...(process.env.PW_CHROMIUM_EXECUTABLE
-      ? { launchOptions: { executablePath: process.env.PW_CHROMIUM_EXECUTABLE } }
-      : {}),
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: selectedProjects(),
 });
+
+/** NFR-50: the three engines users run; E2E_BROWSERS=chromium keeps local runs fast. */
+function selectedProjects(): Project[] {
+  const all: Project[] = [
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        // Optional: reuse a locally installed Chromium instead of Playwright's download.
+        ...(process.env.PW_CHROMIUM_EXECUTABLE
+          ? { launchOptions: { executablePath: process.env.PW_CHROMIUM_EXECUTABLE } }
+          : {}),
+      },
+    },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+  ];
+  const wanted = process.env.E2E_BROWSERS?.split(',').map((name) => name.trim());
+  if (!wanted) return all;
+  const selected = all.filter((project) => wanted.includes(project.name ?? ''));
+  if (selected.length !== wanted.length) {
+    throw new Error(
+      `E2E_BROWSERS must list chromium, firefox and/or webkit; got "${wanted.join(',')}"`,
+    );
+  }
+  return selected;
+}

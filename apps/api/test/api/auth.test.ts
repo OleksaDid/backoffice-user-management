@@ -157,7 +157,7 @@ describe('authentication API (integration)', () => {
     expect((await me(sid)).statusCode).toBe(401);
   });
 
-  it('AUTH-20 the cookie is httpOnly, Secure, SameSite=Strict, API-scoped and lives as long as the session', async () => {
+  it('AUTH-20 NFR-11 the cookie is httpOnly, Secure, SameSite=Strict, API-scoped and lives as long as the session', async () => {
     const response = await signUp();
     const cookie = response.cookies.find((c) => c.name === 'sid');
 

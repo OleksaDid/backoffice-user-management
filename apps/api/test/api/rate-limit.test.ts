@@ -7,7 +7,7 @@ import { useIntegrationApp } from '../support/integration.js';
 const ctx = useIntegrationApp({ authRateLimit: 3 });
 
 describe('authentication rate limiting (integration)', () => {
-  it('AUTH-40 limits sign-in attempts per client IP with Retry-After', async () => {
+  it('AUTH-40 NFR-14 limits sign-in attempts per client IP with Retry-After', async () => {
     const attempt = () =>
       ctx.app.inject({
         method: 'POST',

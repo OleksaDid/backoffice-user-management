@@ -22,7 +22,7 @@ describe('health', () => {
     expect(response.json()).toEqual({ status: 'ok' });
   });
 
-  it('HLT-01 readiness is 200 when the database is reachable and migrated', async () => {
+  it('HLT-01 NFR-31 readiness is 200 when the database is reachable and migrated', async () => {
     const response = await (await start()).inject({ url: '/api/health/ready' });
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual({

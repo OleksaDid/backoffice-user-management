@@ -61,7 +61,7 @@ describe('sign-up page', () => {
     expect(signUp).not.toHaveBeenCalled();
   });
 
-  it('UI-AUTH-05 validates fields before submitting and focuses the first invalid one', async () => {
+  it('UI-AUTH-05 NFR-23 validates fields before submitting and focuses the first invalid one', async () => {
     mockSession(null);
     const { user } = renderApp('/sign-up');
     await screen.findByRole('heading', { name: 'Create your account' });
@@ -123,7 +123,7 @@ describe('sign-up page', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(/Something went wrong on our side/);
   });
 
-  it('UI-AUTH-03 links to sign-in without a page reload and focuses its heading', async () => {
+  it('UI-AUTH-03 NFR-22 links to sign-in without a page reload and focuses its heading', async () => {
     mockSession(null);
     const { user, router } = renderApp('/sign-up');
     await screen.findByRole('heading', { name: 'Create your account' });

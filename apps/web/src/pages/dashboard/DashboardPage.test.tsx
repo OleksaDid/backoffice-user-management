@@ -28,7 +28,7 @@ describe('dashboard: listing and pagination', () => {
     expect(screen.getByRole('button', { name: 'Log out' })).toBeVisible();
   });
 
-  it('DASH-10 shows users in a captioned table and marks the current user', async () => {
+  it('DASH-10 NFR-21 shows users in a captioned table and marks the current user', async () => {
     fakeUsersApi([
       makeUser({ firstName: 'Grace', lastName: 'Hopper', email: 'grace@example.com' }),
     ]);
@@ -244,7 +244,7 @@ describe('dashboard: create, edit, status, delete', () => {
     });
   });
 
-  it('DASH-60 Escape closes a dialog and returns focus to the control that opened it', async () => {
+  it('DASH-60 NFR-22 Escape closes a dialog and returns focus to the control that opened it', async () => {
     fakeUsersApi([makeUser({ firstName: 'Grace', lastName: 'Hopper' })]);
     const { user } = await openDashboard();
     const trigger = screen.getByRole('button', { name: 'Edit Grace Hopper' });
@@ -366,5 +366,52 @@ describe('dashboard: review follow-ups', () => {
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Hello Augusta' })).toBeVisible();
     expect(meCalls).toBe(callsAfterLoad + 1);
+  });
+});
+
+describe('dashboard: presentation details', () => {
+  it('DASH-16 dates use <time> with the machine-readable value and a full-text title', async () => {
+    fakeUsersApi([makeUser({ firstName: 'Grace', lastName: 'Hopper' })]);
+    await openDashboard();
+
+    const row = screen.getByRole('rowheader', { name: 'Grace Hopper' }).closest('tr');
+    const times = row?.querySelectorAll('time') ?? [];
+    expect(times).toHaveLength(2);
+    for (const time of times) {
+      expect(time.getAttribute('datetime')).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+      expect(time.getAttribute('title')).toBeTruthy();
+    }
+  });
+
+  it('DASH-61 success notifications are polite status messages that do not take focus', async () => {
+    fakeUsersApi([makeUser({ firstName: 'Grace', lastName: 'Hopper' })]);
+    const { user } = await openDashboard();
+    const toggle = screen.getByRole('switch', { name: 'Active: Grace Hopper' });
+
+    await user.click(toggle);
+
+    const message = await screen.findByText('Grace Hopper is now inactive.');
+    expect(message.closest('[role="status"]')).not.toBeNull();
+    expect(document.activeElement?.closest('[role="status"]')).toBeNull();
+  });
+
+  it('ERR-22 a page that crashes shows a recoverable error inside the layout', async () => {
+    mockSession(adaAuth);
+    // A malformed response makes the page throw while rendering.
+    server.use(http.get('/api/users', () => HttpResponse.json({ unexpected: true })));
+    const { reporter } = renderApp('/');
+
+    expect(
+      await screen.findByRole(
+        'heading',
+        { level: 1, name: 'Something went wrong' },
+        { timeout: 5000 },
+      ),
+    ).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Reload the app' })).toBeVisible();
+    // The header (theme switcher, log out) stays available.
+    expect(screen.getByRole('radiogroup', { name: 'Theme' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Log out' })).toBeVisible();
+    expect(reporter.report).not.toHaveBeenCalledWith(expect.anything(), { source: 'query' });
   });
 });
