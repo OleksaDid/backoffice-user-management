@@ -35,6 +35,13 @@ updates:
     directories: ['/apps/*']
     schedule:
       interval: weekly
+    # Node.js stays on the active LTS line (24); nginx stays on the stable branch
+    # (even minor versions), mainline releases are odd.
+    ignore:
+      - dependency-name: node
+        update-types: ['version-update:semver-major']
+      - dependency-name: nginxinc/nginx-unprivileged
+        update-types: ['version-update:semver-minor']
     commit-message:
       prefix: chore
       include: scope
