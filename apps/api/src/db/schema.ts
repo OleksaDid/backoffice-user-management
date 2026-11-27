@@ -5,7 +5,9 @@ import {
   integer,
   pgEnum,
   pgTable,
+  text,
   timestamp,
+  uniqueIndex,
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
@@ -26,6 +28,8 @@ export const users = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     firstName: varchar('first_name', { length: 100 }).notNull(),
     lastName: varchar('last_name', { length: 100 }).notNull(),
+    // Expand step (0001): nullable so Part 0 rows and images keep working; required in 0002.
+    email: varchar('email', { length: 254 }),
     status: userStatus('status').notNull().default('active'),
     loginsCount: integer('logins_count').notNull().default(0),
     ...timestamps,
@@ -35,8 +39,24 @@ export const users = pgTable(
     // Serves the paginated list ordered by newest first (USR-05, NFR-40).
     index('users_created_at_id_idx').on(table.createdAt.desc(), table.id.desc()),
     check('users_logins_count_non_negative', sql`${table.loginsCount} >= 0`),
+    // AUTH-10: unique regardless of case.
+    uniqueIndex('users_email_lower_unique').on(sql`lower(${table.email})`),
   ],
 );
+
+/**
+ * Credentials live apart from the profile (ADR 0004): user queries can never select the
+ * hash, and further sign-in methods become new tables instead of nullable columns.
+ */
+export const userCredentials = pgTable('user_credentials', {
+  userId: uuid('user_id')
+    .primaryKey()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  passwordHash: text('password_hash').notNull(),
+  passwordUpdatedAt: timestamp('password_updated_at', { withTimezone: true, mode: 'date' })
+    .notNull()
+    .defaultNow(),
+});
 
 export const sessions = pgTable(
   'sessions',
@@ -59,3 +79,4 @@ export const sessions = pgTable(
 
 export type UserRow = typeof users.$inferSelect;
 export type SessionRow = typeof sessions.$inferSelect;
+export type UserCredentialsRow = typeof userCredentials.$inferSelect;

@@ -27,11 +27,33 @@ describe('migrations (integration)', () => {
     await expect(runMigrations(database.db)).resolves.toBeUndefined();
   });
 
-  it('DATA-01 creates the Part 0 schema', async () => {
+  it('DATA-01 creates the schema: Part 0 tables plus the credentials expand step', async () => {
     const result = await database.db.execute<{ table_name: string }>(
       sql`select table_name from information_schema.tables where table_schema = 'public' order by 1`,
     );
-    expect(result.rows.map((row) => row.table_name)).toEqual(['sessions', 'users']);
+    expect(result.rows.map((row) => row.table_name)).toEqual([
+      'sessions',
+      'user_credentials',
+      'users',
+    ]);
+  });
+
+  it('DATA-02 the expand step keeps email nullable, so Part 0 writes still work', async () => {
+    const result = await database.db.execute<{ is_nullable: string }>(
+      sql`select is_nullable from information_schema.columns where table_name = 'users' and column_name = 'email'`,
+    );
+    expect(result.rows[0]?.is_nullable).toBe('YES');
+  });
+
+  it('AUTH-10 emails are unique regardless of case', async () => {
+    await database.db.execute(
+      sql`insert into users (first_name, last_name, email) values ('A', 'B', 'Ada@Example.com')`,
+    );
+    await expect(
+      database.db.execute(
+        sql`insert into users (first_name, last_name, email) values ('C', 'D', 'ada@example.COM')`,
+      ),
+    ).rejects.toThrow();
   });
 });
 

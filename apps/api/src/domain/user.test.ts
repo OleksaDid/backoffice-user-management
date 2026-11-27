@@ -17,6 +17,7 @@ function user(overrides: Partial<UserEntity> = {}): UserEntity {
     id: 'u1',
     firstName: 'Ada',
     lastName: 'Lovelace',
+    email: 'ada@example.com',
     status: 'active',
     loginsCount: 0,
     createdAt: created,
