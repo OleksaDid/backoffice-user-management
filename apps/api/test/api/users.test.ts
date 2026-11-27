@@ -1,7 +1,7 @@
 import type { Paginated, Session, User } from '@backoffice/contracts';
 import { describe, expect, it } from 'vitest';
 
-import { useIntegrationApp } from '../support/integration.js';
+import { uniqueEmail, useIntegrationApp } from '../support/integration.js';
 
 const ctx = useIntegrationApp();
 const MISSING_ID = '7c9e6679-7425-40de-944b-e07fc1f90ae7';
@@ -10,7 +10,13 @@ async function createUser(body: Record<string, unknown> = {}): Promise<User> {
   const response = await ctx.app.inject({
     method: 'POST',
     url: '/api/users',
-    payload: { firstName: 'Ada', lastName: 'Lovelace', ...body },
+    payload: {
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+      email: uniqueEmail(),
+      password: 'correct horse',
+      ...body,
+    },
   });
   expect(response.statusCode).toBe(201);
   return response.json<User>();
@@ -51,7 +57,14 @@ describe('users API (integration)', () => {
     const response = await ctx.app.inject({
       method: 'POST',
       url: '/api/users',
-      payload: { firstName: 'Ada', lastName: '', loginsCount: 5, createdAt: '2020-01-01' },
+      payload: {
+        firstName: 'Ada',
+        lastName: '',
+        email: uniqueEmail(),
+        password: 'correct horse',
+        loginsCount: 5,
+        createdAt: '2020-01-01',
+      },
     });
 
     expect(response.statusCode).toBe(400);
@@ -60,6 +73,49 @@ describe('users API (integration)', () => {
       .errors.map((error) => error.path)
       .sort();
     expect(paths).toEqual(['createdAt', 'lastName', 'loginsCount']);
+  });
+
+  it('AUTH-12 stores a password hash and never returns the password', async () => {
+    const user = await createUser({ email: 'Grace@Example.com' });
+
+    expect(user.email).toBe('grace@example.com');
+    expect(JSON.stringify(user)).not.toContain('correct horse');
+    expect(user).not.toHaveProperty('password');
+    const stored = await ctx.database.pool.query<{ password_hash: string }>(
+      'select password_hash from user_credentials where user_id = $1',
+      [user.id],
+    );
+    expect(stored.rows[0]?.password_hash).toMatch(/^scrypt\$/);
+  });
+
+  it('AUTH-12 rejects a duplicate email regardless of case and creates nothing', async () => {
+    await createUser({ email: 'ada@example.com' });
+
+    const response = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/users',
+      payload: {
+        firstName: 'Other',
+        lastName: 'Person',
+        email: 'ADA@example.com',
+        password: 'correct horse',
+      },
+    });
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json()).toMatchObject({ code: 'EMAIL_ALREADY_REGISTERED' });
+    expect((await listUsers()).body.totalItems).toBe(1);
+  });
+
+  it('AUTH-12 requires an email and a valid password', async () => {
+    for (const payload of [
+      { firstName: 'A', lastName: 'B', password: 'correct horse' },
+      { firstName: 'A', lastName: 'B', email: 'not-an-email', password: 'correct horse' },
+      { firstName: 'A', lastName: 'B', email: uniqueEmail(), password: 'short' },
+    ]) {
+      const response = await ctx.app.inject({ method: 'POST', url: '/api/users', payload });
+      expect(response.statusCode, JSON.stringify(payload)).toBe(400);
+    }
   });
 
   it('USR-03 returns a page with totals', async () => {

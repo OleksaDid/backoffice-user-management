@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { emailSchema, passwordSchema } from './credentials.js';
+
 export const userStatusSchema = z.enum(['active', 'inactive']);
 export type UserStatus = z.infer<typeof userStatusSchema>;
 
@@ -18,6 +20,8 @@ export const userSchema = z
     id: z.uuid(),
     firstName: z.string(),
     lastName: z.string(),
+    /** Null only for users created before credentials existed (spec 06, legacy rows). */
+    email: z.string().nullable(),
     status: userStatusSchema,
     loginsCount: z.number().int().min(0),
     createdAt: z.iso.datetime(),
@@ -26,10 +30,12 @@ export const userSchema = z
   .meta({ id: 'User' });
 export type User = z.infer<typeof userSchema>;
 
-/** USR-01, USR-02: unknown and read-only fields are rejected. */
+/** USR-01, USR-02, AUTH-12: unknown and read-only fields are rejected; every user can sign in. */
 export const createUserBodySchema = z.strictObject({
   firstName: personNameSchema,
   lastName: personNameSchema,
+  email: emailSchema,
+  password: passwordSchema,
   status: userStatusSchema.optional(),
 });
 export type CreateUserBody = z.infer<typeof createUserBodySchema>;

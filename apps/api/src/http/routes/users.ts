@@ -42,9 +42,9 @@ export const userRoutes =
       {
         schema: {
           tags,
-          summary: 'Create a user',
+          summary: 'Create a user with an initial password',
           body: createUserBodySchema,
-          response: { 201: userSchema, 400: problem },
+          response: { 201: userSchema, 400: problem, 409: problem },
         },
       },
       async (request, reply) => {

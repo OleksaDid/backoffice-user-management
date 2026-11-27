@@ -7,9 +7,21 @@ import { createReadinessProbe } from '../../src/db/migrations.js';
 import type { App } from '../../src/http/types.js';
 import { LoggerErrorReporter } from '../../src/infra/error-reporter.js';
 import { createUnitOfWork } from '../../src/repositories/unit-of-work.js';
+import { PasswordHasher } from '../../src/security/password-hasher.js';
 import { SessionService } from '../../src/services/session-service.js';
 import { UserService } from '../../src/services/user-service.js';
 import { startTestDatabase, type TestDatabase } from './database.js';
+
+/** Low-cost hashing keeps integration tests fast; production uses the default cost. */
+export const testHasher = new PasswordHasher({ N: 2 ** 10, r: 8, p: 1 });
+
+let emailSequence = 0;
+
+/** A unique, valid email for test data. */
+export function uniqueEmail(prefix = 'user'): string {
+  emailSequence += 1;
+  return `${prefix}${emailSequence}@example.com`;
+}
 
 export interface IntegrationContext {
   app: App;
@@ -43,7 +55,7 @@ export function useIntegrationApp(options: { sessionTtlHours?: number } = {}): I
       errorReporter: new LoggerErrorReporter(logger),
       readinessProbe: createReadinessProbe(context.database.db),
       services: {
-        users: new UserService(uow, clock),
+        users: new UserService(uow, clock, testHasher),
         sessions: new SessionService(uow, clock, options.sessionTtlHours ?? 168),
       },
     });

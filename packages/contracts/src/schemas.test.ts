@@ -9,21 +9,36 @@ import {
 } from './users.js';
 
 describe('user schemas', () => {
-  it('USR-01 trims names and defaults nothing else', () => {
-    expect(createUserBodySchema.parse({ firstName: '  Ada ', lastName: 'Lovelace' })).toEqual({
+  it('USR-01 AUTH-12 trims names, normalises the email and requires a password', () => {
+    expect(
+      createUserBodySchema.parse({
+        firstName: '  Ada ',
+        lastName: 'Lovelace',
+        email: 'Ada@Example.com',
+        password: 'long enough',
+      }),
+    ).toEqual({
       firstName: 'Ada',
       lastName: 'Lovelace',
+      email: 'ada@example.com',
+      password: 'long enough',
     });
+    expect(createUserBodySchema.safeParse({ firstName: 'Ada', lastName: 'L' }).success).toBe(false);
   });
 
   it('USR-02 rejects blank, too long and read-only fields', () => {
-    expect(createUserBodySchema.safeParse({ firstName: '   ', lastName: 'L' }).success).toBe(false);
-    expect(
-      createUserBodySchema.safeParse({ firstName: 'a'.repeat(101), lastName: 'L' }).success,
-    ).toBe(false);
-    expect(
-      createUserBodySchema.safeParse({ firstName: 'A', lastName: 'L', loginsCount: 3 }).success,
-    ).toBe(false);
+    const valid = {
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+      email: 'ada@example.com',
+      password: 'long enough',
+    };
+    expect(createUserBodySchema.safeParse(valid).success).toBe(true);
+    expect(createUserBodySchema.safeParse({ ...valid, firstName: '   ' }).success).toBe(false);
+    expect(createUserBodySchema.safeParse({ ...valid, lastName: 'a'.repeat(101) }).success).toBe(
+      false,
+    );
+    expect(createUserBodySchema.safeParse({ ...valid, loginsCount: 3 }).success).toBe(false);
   });
 
   it('USR-07 USR-08 accepts profile fields only and requires both names', () => {

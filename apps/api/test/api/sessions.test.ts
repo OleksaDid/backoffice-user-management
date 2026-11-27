@@ -1,7 +1,7 @@
 import type { Paginated, Session, User } from '@backoffice/contracts';
 import { describe, expect, it } from 'vitest';
 
-import { useIntegrationApp } from '../support/integration.js';
+import { uniqueEmail, useIntegrationApp } from '../support/integration.js';
 
 const ctx = useIntegrationApp({ sessionTtlHours: 24 });
 const MISSING_ID = '7c9e6679-7425-40de-944b-e07fc1f90ae7';
@@ -10,7 +10,13 @@ async function createUser(status: 'active' | 'inactive' = 'active'): Promise<Use
   const response = await ctx.app.inject({
     method: 'POST',
     url: '/api/users',
-    payload: { firstName: 'Ada', lastName: 'Lovelace', status },
+    payload: {
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+      email: uniqueEmail(),
+      password: 'correct horse',
+      status,
+    },
   });
   return response.json<User>();
 }

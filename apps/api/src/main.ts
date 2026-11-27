@@ -6,6 +6,7 @@ import { createDatabase } from './db/client.js';
 import { createReadinessProbe } from './db/migrations.js';
 import { LoggerErrorReporter } from './infra/error-reporter.js';
 import { createUnitOfWork } from './repositories/unit-of-work.js';
+import { PasswordHasher } from './security/password-hasher.js';
 import { systemClock } from './services/clock.js';
 import { SessionService } from './services/session-service.js';
 import { UserService } from './services/user-service.js';
@@ -42,7 +43,7 @@ async function main(): Promise<void> {
     errorReporter,
     readinessProbe: createReadinessProbe(database.db),
     services: {
-      users: new UserService(uow, systemClock),
+      users: new UserService(uow, systemClock, new PasswordHasher()),
       sessions: new SessionService(uow, systemClock, config.SESSION_TTL_HOURS),
     },
   });

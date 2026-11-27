@@ -8,8 +8,12 @@ import type { Executor } from './executor.js';
 export interface NewUser {
   firstName: string;
   lastName: string;
+  email: string;
   status: UserStatus;
 }
+
+/** Name of the unique index that enforces AUTH-10. */
+export const EMAIL_UNIQUE_CONSTRAINT = 'users_email_lower_unique';
 
 export class UserRepository {
   constructor(private readonly db: Executor) {}
@@ -44,6 +48,15 @@ export class UserRepository {
 
   async findById(id: string): Promise<UserEntity | undefined> {
     const [row] = await this.db.select().from(users).where(eq(users.id, id));
+    return row;
+  }
+
+  /** AUTH-03: emails are stored lower-cased; the lookup uses the lower(email) index. */
+  async findByEmail(email: string): Promise<UserEntity | undefined> {
+    const [row] = await this.db
+      .select()
+      .from(users)
+      .where(sql`lower(${users.email}) = ${email.toLowerCase()}`);
     return row;
   }
 
