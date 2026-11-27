@@ -1,4 +1,4 @@
-import { expect, type Page, test } from '@playwright/test';
+import { type BrowserContextOptions, expect, type Page, test } from '@playwright/test';
 
 import { expectNoA11yViolations } from '../support/accessibility.js';
 import { newUser, signUp } from '../support/users.js';
@@ -17,20 +17,29 @@ test.describe('themes @full', () => {
     await expect.poll(() => scheme(page)).toBe('light');
   });
 
-  test('THEME-03 the chosen theme survives closing and reopening the app', async ({ browser }) => {
-    const context = await browser.newContext({ colorScheme: 'light' });
-    const page = await context.newPage();
+  test('THEME-03 the chosen theme survives closing and reopening the app', async ({
+    browser,
+    baseURL,
+  }) => {
+    const options: BrowserContextOptions = { colorScheme: 'light' };
+    if (baseURL) {
+      options.baseURL = baseURL;
+    }
+    const first = await browser.newContext(options);
+    const page = await first.newPage();
     await page.goto('/sign-up');
     await page.getByText('Dark', { exact: true }).click();
     await expect.poll(() => scheme(page)).toBe('dark');
-    await page.close();
+    const saved = await first.storageState();
+    await first.close();
 
-    // A new tab in the same browser profile: localStorage persists, like reopening the app.
-    const reopened = await context.newPage();
-    await reopened.goto('/sign-in');
-    await expect(reopened.getByRole('radio', { name: 'Dark' })).toBeChecked();
-    expect(await scheme(reopened)).toBe('dark');
-    await context.close();
+    // A brand-new browser context with only the persisted storage: the app was closed.
+    const reopened = await browser.newContext({ ...options, storageState: saved });
+    const again = await reopened.newPage();
+    await again.goto('/sign-in');
+    await expect(again.getByRole('radio', { name: 'Dark' })).toBeChecked();
+    expect(await scheme(again)).toBe('dark');
+    await reopened.close();
   });
 
   test('THEME-04 the stored theme is applied before the app script runs', async ({ page }) => {
@@ -38,8 +47,13 @@ test.describe('themes @full', () => {
     await page.getByText('Dark', { exact: true }).click();
     await expect.poll(() => scheme(page)).toBe('dark');
 
-    // Block the application bundle: only the blocking theme-init script can set the scheme.
-    await page.route('**/assets/*.js', (route) => route.abort());
+    // Block every script except theme-init.js (production bundle and dev-server modules
+    // alike): only the blocking init script can then set the scheme.
+    await page.route(
+      (url) => !url.pathname.endsWith('/theme-init.js'),
+      (route) =>
+        ['script'].includes(route.request().resourceType()) ? route.abort() : route.continue(),
+    );
     await page.reload();
     expect(await scheme(page)).toBe('dark');
   });

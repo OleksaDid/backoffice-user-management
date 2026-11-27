@@ -1,5 +1,7 @@
 import { screen, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { THEME_STORAGE_KEY } from '../app/theme-preference';
 import { fakeUsersApi } from '../test/fake-users-api';
@@ -62,16 +64,31 @@ describe('theme switcher', () => {
         throw new Error('SecurityError: storage disabled');
       },
     });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     try {
       const { user } = renderApp('/sign-up');
       await user.click(await screen.findByRole('radio', { name: 'Dark' }));
       await waitFor(() => {
         expect(scheme()).toBe('dark');
       });
+      // Mantine reports the failed write instead of throwing.
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining('unable to save color scheme'),
+        expect.anything(),
+      );
     } finally {
+      warn.mockRestore();
       if (original) {
         Object.defineProperty(window, 'localStorage', original);
       }
     }
+  });
+});
+
+describe('theme init script', () => {
+  it('THEME-04 reads the same storage key as the app', () => {
+    // Tests run from the web workspace root.
+    const script = readFileSync('public/theme-init.js', 'utf8');
+    expect(script).toContain(`'${THEME_STORAGE_KEY}'`);
   });
 });
