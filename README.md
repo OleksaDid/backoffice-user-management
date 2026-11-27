@@ -7,6 +7,8 @@ single-page app sharing typed contracts, backed by PostgreSQL.
 
 ## Documentation
 
+- [Behaviour specification](docs/spec/README.md)
+- [Acceptance criteria mapped to the spec](docs/acceptance-criteria.md)
 - [Contributing and delivery workflow](CONTRIBUTING.md)
 - [Decision log](docs/decisions/README.md)
 - [Guidance for AI coding agents](AGENTS.md)
