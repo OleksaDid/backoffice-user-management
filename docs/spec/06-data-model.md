@@ -7,9 +7,9 @@ committed, forward-only SQL migration, applied automatically before the API star
 
 | Migration               | Phase  | Kind     | Change                                                                      |
 | ----------------------- | ------ | -------- | --------------------------------------------------------------------------- |
-| `0001_init`             | Part 0 | create   | `users`, `sessions`, enum `user_status`, indexes                            |
-| `0002_user_credentials` | Part 1 | expand   | nullable `users.email` + unique index on `lower(email)`; `user_credentials` |
-| `0003_email_required`   | Part 2 | contract | backfill legacy users without email, then `users.email NOT NULL`            |
+| `0000_init`             | Part 0 | create   | `users`, `sessions`, enum `user_status`, indexes                            |
+| `0001_user_credentials` | Part 1 | expand   | nullable `users.email` + unique index on `lower(email)`; `user_credentials` |
+| `0002_email_required`   | Part 2 | contract | backfill legacy users without email, then `users.email NOT NULL`            |
 
 - **DATA-01** Migrations are forward-only and immutable once merged. A fix is a new migration.
 - **DATA-02** Schema changes follow **expand → migrate → contract**: a release only adds what the
@@ -20,14 +20,14 @@ committed, forward-only SQL migration, applied automatically before the API star
 
 ## Tables
 
-### `users` (after `0003`)
+### `users` (after `0002`)
 
 | Column         | Type           | Constraints                                            |
 | -------------- | -------------- | ------------------------------------------------------ |
 | `id`           | `uuid`         | primary key, default `gen_random_uuid()`               |
 | `first_name`   | `varchar(100)` | not null                                               |
 | `last_name`    | `varchar(100)` | not null                                               |
-| `email`        | `varchar(254)` | not null (from `0003`); unique index on `lower(email)` |
+| `email`        | `varchar(254)` | not null (from `0002`); unique index on `lower(email)` |
 | `status`       | `user_status`  | not null, default `active`; enum `active`, `inactive`  |
 | `logins_count` | `integer`      | not null, default 0, check `>= 0`                      |
 | `created_at`   | `timestamptz`  | not null, default `now()`                              |
@@ -68,9 +68,9 @@ active sessions of a user" (USR-11).
   same transaction that creates the session (SES-03).
 - **DATA-12** Deleting a user cascades to sessions and credentials (USR-13).
 
-## Legacy rows in `0003`
+## Legacy rows in `0002`
 
-Users created in Part 0 have no email and no credentials. `0003` gives them a placeholder
+Users created in Part 0 have no email and no credentials. `0002` gives them a placeholder
 `legacy-<id>@example.invalid` (the `.invalid` TLD is reserved and can never receive mail) so the
 `NOT NULL` constraint holds. They cannot sign in until a password reset feature exists, which is
 listed as a future improvement.
