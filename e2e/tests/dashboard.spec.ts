@@ -42,10 +42,10 @@ test.describe('user management dashboard @full', () => {
 
     await expect(page.getByRole('table').getByRole('row')).toHaveCount(7); // header + 6
     const nav = page.getByRole('navigation', { name: 'Pagination' });
-    await nav.getByRole('button', { name: 'Page 2' }).click();
+    await nav.getByRole('button', { name: 'Page 2', exact: true }).click();
 
     await expect(page).toHaveURL(/\?page=2$/);
-    await expect(nav.getByRole('button', { name: 'Page 2' })).toHaveAttribute(
+    await expect(nav.getByRole('button', { name: 'Page 2', exact: true })).toHaveAttribute(
       'aria-current',
       'page',
     );
