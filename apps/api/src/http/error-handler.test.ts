@@ -21,6 +21,9 @@ async function appWithRoutes() {
   app.get('/test/crash', () => {
     throw new Error('connection string postgres://secret@db leaked');
   });
+  app.get('/test/db-down', () => {
+    throw Object.assign(new Error('connect ECONNREFUSED 10.0.0.5:5432'), { code: 'ECONNREFUSED' });
+  });
   app.post(
     '/test/validate',
     { schema: { body: z.strictObject({ firstName: z.string().min(1) }) } },
@@ -107,5 +110,36 @@ describe('central error handling', () => {
 
     expect(response.statusCode).toBe(404);
     expect(response.json()).toMatchObject({ code: 'ROUTE_NOT_FOUND', status: 404 });
+  });
+});
+
+describe('error mapping for framework and infrastructure failures', () => {
+  it('ERR-11 maps unsupported media types and oversized bodies to their own codes', async () => {
+    const { app } = await appWithRoutes();
+    const xml = await app.inject({
+      method: 'POST',
+      url: '/test/validate',
+      headers: { 'content-type': 'application/xml' },
+      payload: '<user/>',
+    });
+    expect(xml.statusCode).toBe(415);
+    expect(xml.json()).toMatchObject({ code: 'UNSUPPORTED_MEDIA_TYPE' });
+
+    const huge = await app.inject({
+      method: 'POST',
+      url: '/test/validate',
+      payload: { firstName: 'a'.repeat(70_000) },
+    });
+    expect(huge.statusCode).toBe(413);
+    expect(huge.json()).toMatchObject({ code: 'PAYLOAD_TOO_LARGE' });
+  });
+
+  it('ERR-11 answers 503 when the database cannot be reached', async () => {
+    const { app, errorReporter } = await appWithRoutes();
+    const response = await app.inject({ url: '/test/db-down' });
+    expect(response.statusCode).toBe(503);
+    expect(response.json()).toMatchObject({ code: 'SERVICE_UNAVAILABLE' });
+    expect(response.body).not.toContain('10.0.0.5');
+    expect(errorReporter.report).toHaveBeenCalled();
   });
 });

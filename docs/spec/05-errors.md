@@ -41,6 +41,8 @@ The catalog lives in `packages/contracts` and is shared by the API and the web a
 | `EMAIL_ALREADY_REGISTERED`    | 409  | email used by another user                      |
 | `USER_NAME_LOCKED`            | 409  | profile change for an inactive user             |
 | `SELF_MODIFICATION_FORBIDDEN` | 409  | deactivating or deleting one's own account      |
+| `PAYLOAD_TOO_LARGE`           | 413  | request body over the size limit                |
+| `UNSUPPORTED_MEDIA_TYPE`      | 415  | body is not JSON                                |
 | `RATE_LIMITED`                | 429  | too many requests                               |
 | `INTERNAL_ERROR`              | 500  | any unexpected error                            |
 | `SERVICE_UNAVAILABLE`         | 503  | dependency down (readiness), server overloaded  |

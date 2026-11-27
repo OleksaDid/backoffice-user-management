@@ -59,6 +59,16 @@ export const errorCatalog = {
     title: 'Self-modification forbidden',
     defaultDetail: 'You cannot deactivate or delete your own account.',
   },
+  PAYLOAD_TOO_LARGE: {
+    status: 413,
+    title: 'Payload too large',
+    defaultDetail: 'The request body is too large.',
+  },
+  UNSUPPORTED_MEDIA_TYPE: {
+    status: 415,
+    title: 'Unsupported media type',
+    defaultDetail: 'Send the request body as application/json.',
+  },
   RATE_LIMITED: {
     status: 429,
     title: 'Too many requests',

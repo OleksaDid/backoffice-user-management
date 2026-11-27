@@ -48,6 +48,7 @@ async function toApiError(response: Response): Promise<ApiError> {
 function codeForStatus(status: number): ErrorCode {
   if (status === 401) return 'UNAUTHENTICATED';
   if (status === 404) return 'ROUTE_NOT_FOUND';
+  if (status === 413) return 'PAYLOAD_TOO_LARGE';
   if (status === 429) return 'RATE_LIMITED';
   if (status === 503) return 'SERVICE_UNAVAILABLE';
   if (status >= 500) return 'INTERNAL_ERROR';
