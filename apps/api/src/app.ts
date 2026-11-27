@@ -14,6 +14,7 @@ import {
 import type { Logger } from 'pino';
 
 import type { Config } from './config/env.js';
+import { csrfGuard } from './http/csrf.js';
 import { registerErrorHandling } from './http/error-handler.js';
 import { authRoutes } from './http/routes/auth.js';
 import { healthRoutes, type ReadinessProbe } from './http/routes/health.js';
@@ -29,7 +30,7 @@ import type { UserService } from './services/user-service.js';
 export const API_PREFIX = '/api';
 
 export interface AppDependencies {
-  config: Pick<Config, 'NODE_ENV' | 'TRUST_PROXY_HOPS' | 'COOKIE_SECURE'>;
+  config: Pick<Config, 'NODE_ENV' | 'TRUST_PROXY_HOPS' | 'COOKIE_SECURE' | 'PUBLIC_ORIGIN'>;
   logger: Logger;
   errorReporter: ErrorReporter;
   readinessProbe: ReadinessProbe;
@@ -75,6 +76,7 @@ export async function buildApp(deps: AppDependencies): Promise<App> {
   });
 
   await app.register(cookie);
+  app.addHook('onRequest', csrfGuard(deps.config.PUBLIC_ORIGIN));
   app.decorateRequest('auth', null);
 
   // JSON API: the HTML security policy is set by the web server; keep the other headers.

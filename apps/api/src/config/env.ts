@@ -18,6 +18,11 @@ export const envSchema = z.object({
   /** Number of reverse proxies in front of the API whose X-Forwarded-* headers are trusted. */
   TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(0),
   SHUTDOWN_TIMEOUT_MS: z.coerce.number().int().min(1000).max(60_000).default(10_000),
+  /**
+   * AUTH-21: the origin the browser app is served from. State-changing requests from any
+   * other origin are rejected. Required in production.
+   */
+  PUBLIC_ORIGIN: z.url().optional(),
   /** AUTH-20: send the session cookie only over HTTPS. Disable only for plain-HTTP local runs. */
   COOKIE_SECURE: booleanString.default(true),
   /** Absolute session lifetime (spec 01, Session). */
@@ -29,7 +34,10 @@ export const envSchema = z.object({
     .default(168),
 });
 
-export type Config = z.infer<typeof envSchema>;
+/** Development fallback: the Compose stack's web server. */
+const DEFAULT_PUBLIC_ORIGIN = 'http://localhost:8080';
+
+export type Config = Omit<z.infer<typeof envSchema>, 'PUBLIC_ORIGIN'> & { PUBLIC_ORIGIN: string };
 
 export class ConfigError extends Error {
   constructor(readonly issues: string[]) {
@@ -46,5 +54,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       result.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`),
     );
   }
-  return result.data;
+  const { PUBLIC_ORIGIN, ...rest } = result.data;
+  if (!PUBLIC_ORIGIN && rest.NODE_ENV === 'production') {
+    throw new ConfigError(['PUBLIC_ORIGIN: required in production']);
+  }
+  // Origins never end with a slash; normalise so the comparison is exact.
+  return { ...rest, PUBLIC_ORIGIN: new URL(PUBLIC_ORIGIN ?? DEFAULT_PUBLIC_ORIGIN).origin };
 }

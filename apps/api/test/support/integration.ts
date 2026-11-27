@@ -13,6 +13,7 @@ import { PasswordHasher } from '../../src/security/password-hasher.js';
 import { AuthService } from '../../src/services/auth-service.js';
 import { SessionService } from '../../src/services/session-service.js';
 import { UserService } from '../../src/services/user-service.js';
+import { TEST_ORIGIN } from './build-test-app.js';
 import { startTestDatabase, type TestDatabase } from './database.js';
 
 /** Low-cost hashing keeps integration tests fast; production uses the default cost. */
@@ -72,7 +73,12 @@ export function useIntegrationApp(options: { sessionTtlHours?: number } = {}): I
     const clock = () => context.clock.now;
     const logger = pino({ level: 'silent' });
     context.app = await buildApp({
-      config: { NODE_ENV: 'test', TRUST_PROXY_HOPS: 0, COOKIE_SECURE: true },
+      config: {
+        NODE_ENV: 'test',
+        TRUST_PROXY_HOPS: 0,
+        COOKIE_SECURE: true,
+        PUBLIC_ORIGIN: TEST_ORIGIN,
+      },
       clock,
       logger,
       errorReporter: new LoggerErrorReporter(logger),

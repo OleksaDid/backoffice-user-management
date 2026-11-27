@@ -46,6 +46,7 @@ Values are not listed on purpose; secrets are generated on the server.
 | --------------------- | ------------- | ----------------------------------------------------------------------------- | --------------------------------------- |
 | `DATABASE_URL`        | yes           | PostgreSQL connection (secret: contains the password)                         | `postgres://user:pass@db:5432/name`     |
 | `PUBLIC_ORIGIN`       | from `v0.3.0` | Public origin; state-changing requests from other origins are rejected (CSRF) | `https://test.oleksa.live`              |
+| `COOKIE_SECURE`       | no            | Send the session cookie only over HTTPS; keep the default on servers          | `true` (default) or `false`             |
 | `TRUST_PROXY_HOPS`    | no            | Proxies whose `X-Forwarded-*` headers are trusted (`web` = 1)                 | integer, default `0`; template sets `1` |
 | `NODE_ENV`            | no            | Runtime mode                                                                  | `production` (set in the image)         |
 | `LOG_LEVEL`           | no            | Log verbosity                                                                 | `info` (default), `warn`, `debug`, ...  |

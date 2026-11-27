@@ -22,6 +22,15 @@ describe('loadConfig', () => {
     expect(config.LOG_PRETTY).toBe(true);
   });
 
+  it('AUTH-21 requires PUBLIC_ORIGIN in production and normalises it', () => {
+    expect(() => loadConfig({ ...minimal, NODE_ENV: 'production' })).toThrow(/PUBLIC_ORIGIN/);
+    expect(
+      loadConfig({ ...minimal, NODE_ENV: 'production', PUBLIC_ORIGIN: 'https://test.oleksa.live/' })
+        .PUBLIC_ORIGIN,
+    ).toBe('https://test.oleksa.live');
+    expect(loadConfig(minimal).PUBLIC_ORIGIN).toBe('http://localhost:8080');
+  });
+
   it('NFR-15 refuses to start without a database URL', () => {
     expect(() => loadConfig({})).toThrow(ConfigError);
   });
