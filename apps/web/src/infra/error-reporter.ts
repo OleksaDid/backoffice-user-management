@@ -1,6 +1,6 @@
 export interface ErrorContext {
   source: 'boundary' | 'window' | 'unhandledrejection' | 'query';
-  componentStack?: string | null;
+  componentStack?: string | null | undefined;
 }
 
 /**
