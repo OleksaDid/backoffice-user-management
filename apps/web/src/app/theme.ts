@@ -1,4 +1,4 @@
-import { Anchor, type CSSVariablesResolver, createTheme } from '@mantine/core';
+import { Anchor, type CSSVariablesResolver, createTheme, Modal } from '@mantine/core';
 
 /**
  * Design tokens. Mantine exposes them as CSS variables, so components and our own CSS
@@ -25,10 +25,14 @@ export const theme = createTheme({
     'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
   defaultRadius: 'md',
   focusRing: 'auto',
+  // Buttons, switches and pagination controls show the pointer cursor.
+  cursorType: 'pointer',
   respectReducedMotion: true,
   components: {
     // WCAG 1.4.1: links inside text must not rely on colour alone (axe link-in-text-block).
     Anchor: Anchor.extend({ defaultProps: { underline: 'always' } }),
+    // WCAG 4.1.2: the dialog close button has no accessible name by default (axe button-name).
+    Modal: Modal.extend({ defaultProps: { closeButtonProps: { 'aria-label': 'Close dialog' } } }),
   },
 });
 

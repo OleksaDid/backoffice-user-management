@@ -1,8 +1,9 @@
 import { screen } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ApiError } from '../api/errors';
+import { fakeUsersApi } from '../test/fake-users-api';
 import { adaAuth, mockSession, problem, renderApp } from '../test/render-app';
 import { server, setupMockServer } from '../test/server';
 import { createQueryClient } from './query-client';
@@ -10,6 +11,10 @@ import { createQueryClient } from './query-client';
 setupMockServer();
 
 describe('session flow', () => {
+  beforeEach(() => {
+    fakeUsersApi();
+  });
+
   it('UI-AUTH-02 UI-AUTH-10 a signed-in user is forwarded to the welcome page', async () => {
     mockSession(adaAuth);
     const { router } = renderApp('/sign-in');

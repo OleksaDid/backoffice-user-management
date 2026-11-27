@@ -1,14 +1,10 @@
-import '@mantine/core/styles.css';
-
-import { MantineProvider } from '@mantine/core';
-import { QueryClientProvider } from '@tanstack/react-query';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router';
 
+import { AppProviders } from './app/AppProviders';
 import { createQueryClient } from './app/query-client';
 import { createRoutes } from './app/routes';
-import { cssVariablesResolver, theme } from './app/theme';
 import { consoleErrorReporter, installGlobalErrorHandlers } from './infra/error-reporter';
 
 const reporter = consoleErrorReporter;
@@ -33,10 +29,8 @@ createRoot(root, {
   },
 }).render(
   <StrictMode>
-    <MantineProvider theme={theme} cssVariablesResolver={cssVariablesResolver}>
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
-      </QueryClientProvider>
-    </MantineProvider>
+    <AppProviders queryClient={queryClient}>
+      <RouterProvider router={router} />
+    </AppProviders>
   </StrictMode>,
 );

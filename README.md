@@ -3,7 +3,7 @@
 A back-office application for registering and managing users: a Fastify REST API and a React
 single-page app sharing typed contracts, backed by PostgreSQL.
 
-> Work in progress: the users, sessions and authentication API (Parts 0 and 1, backend) is in place; the UI arrives part by part.
+> Work in progress: authentication (Part 1) and the user management dashboard (Part 2) are done; themes and the final documentation follow.
 
 ## Live environments
 
@@ -16,7 +16,7 @@ Requirements: Docker with Compose v2.
 
 ```bash
 docker compose up --build
-open http://localhost:8080                     # web app
+open http://localhost:8080                     # web app: sign up, then manage users
 curl http://localhost:8080/api/health/ready   # {"status":"ok",...}
 open http://localhost:8080/api/docs           # OpenAPI UI
 docker compose run --rm api npm run db:reset-demo   # optional: 20 demo users

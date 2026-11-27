@@ -4,6 +4,7 @@ import { paginationQuerySchema, totalPages } from './pagination.js';
 import { createSessionBodySchema } from './sessions.js';
 import {
   createUserBodySchema,
+  createUserFormSchema,
   updateUserProfileBodySchema,
   updateUserStatusBodySchema,
 } from './users.js';
@@ -92,5 +93,21 @@ describe('session schemas', () => {
       createSessionBodySchema.safeParse({ userId: '0b9f4c1e-5d6a-4c55-9c33-6e0f2f2d9a11' }).success,
     ).toBe(true);
     expect(createSessionBodySchema.safeParse({ userId: 'nope' }).success).toBe(false);
+  });
+});
+
+describe('create-user form', () => {
+  it('DASH-20 checks the password confirmation on the confirmation field', () => {
+    const form = {
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+      email: 'ada@example.com',
+      password: 'correct horse',
+    };
+    const mismatch = createUserFormSchema.safeParse({ ...form, confirmPassword: 'other one' });
+    expect(mismatch.error?.issues[0]?.path).toEqual(['confirmPassword']);
+    expect(
+      createUserFormSchema.safeParse({ ...form, confirmPassword: form.password }).success,
+    ).toBe(true);
   });
 });

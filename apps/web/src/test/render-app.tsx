@@ -1,15 +1,13 @@
 import type { AuthResponse } from '@backoffice/contracts';
-import { MantineProvider } from '@mantine/core';
-import { QueryClientProvider } from '@tanstack/react-query';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { vi } from 'vitest';
 
+import { AppProviders } from '../app/AppProviders';
 import { createQueryClient } from '../app/query-client';
 import { createRoutes } from '../app/routes';
-import { cssVariablesResolver, theme } from '../app/theme';
 import { server } from './server';
 
 export const adaAuth: AuthResponse = {
@@ -60,11 +58,9 @@ export function renderApp(path = '/') {
   });
   const user = userEvent.setup();
   const view = render(
-    <MantineProvider theme={theme} cssVariablesResolver={cssVariablesResolver}>
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
-      </QueryClientProvider>
-    </MantineProvider>,
+    <AppProviders queryClient={queryClient}>
+      <RouterProvider router={router} />
+    </AppProviders>,
   );
   return { ...view, user, router, queryClient, reporter };
 }

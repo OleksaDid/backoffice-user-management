@@ -1,11 +1,15 @@
 import { screen } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
+import { fakeUsersApi } from '../test/fake-users-api';
 import { adaAuth, mockSession, problem, renderApp } from '../test/render-app';
 import { server, setupMockServer } from '../test/server';
 
 setupMockServer();
+beforeEach(() => {
+  fakeUsersApi();
+});
 
 async function signIn(user: ReturnType<typeof renderApp>['user']) {
   await screen.findByRole('heading', { level: 1, name: 'Sign in' });

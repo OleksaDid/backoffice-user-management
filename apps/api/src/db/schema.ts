@@ -28,8 +28,8 @@ export const users = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     firstName: varchar('first_name', { length: 100 }).notNull(),
     lastName: varchar('last_name', { length: 100 }).notNull(),
-    // Expand step (0001): nullable so Part 0 rows and images keep working; required in 0002.
-    email: varchar('email', { length: 254 }),
+    // Added nullable in 0001 (expand), required since 0002 (contract) after a backfill.
+    email: varchar('email', { length: 254 }).notNull(),
     status: userStatus('status').notNull().default('active'),
     loginsCount: integer('logins_count').notNull().default(0),
     ...timestamps,

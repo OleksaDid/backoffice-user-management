@@ -20,8 +20,7 @@ export const userSchema = z
     id: z.uuid(),
     firstName: z.string(),
     lastName: z.string(),
-    /** Null only for users created before credentials existed (spec 06, legacy rows). */
-    email: z.string().nullable(),
+    email: z.string(),
     status: userStatusSchema,
     loginsCount: z.number().int().min(0),
     createdAt: z.iso.datetime(),
@@ -50,3 +49,15 @@ export type UpdateUserProfileBody = z.infer<typeof updateUserProfileBodySchema>;
 /** USR-10: status has its own endpoint. */
 export const updateUserStatusBodySchema = z.strictObject({ status: userStatusSchema });
 export type UpdateUserStatusBody = z.infer<typeof updateUserStatusBodySchema>;
+
+/**
+ * DASH-20: the create-user dialog asks for the password twice; the confirmation is
+ * checked before any request, like sign-up (UI-AUTH-04).
+ */
+export const createUserFormSchema = createUserBodySchema
+  .extend({ confirmPassword: z.string() })
+  .refine((form) => form.password === form.confirmPassword, {
+    error: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
+export type CreateUserForm = z.input<typeof createUserFormSchema>;

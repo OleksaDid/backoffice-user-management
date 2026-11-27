@@ -3,7 +3,6 @@ import { Navigate, type RouteObject } from 'react-router';
 import { PublicOnly, RequireAuth } from '../auth/guards';
 import { SignInPage } from '../pages/SignInPage';
 import { SignUpPage } from '../pages/SignUpPage';
-import { WelcomePage } from '../pages/WelcomePage';
 import { AppLayout } from './AppLayout';
 import { RouteError } from './RouteError';
 
@@ -23,7 +22,15 @@ export function createRoutes(): RouteObject[] {
         },
         {
           element: <RequireAuth />,
-          children: [{ index: true, element: <WelcomePage /> }],
+          // DASH-01: the dashboard replaces the welcome page; loaded on demand (NFR-42).
+          children: [
+            {
+              index: true,
+              lazy: async () => ({
+                Component: (await import('../pages/dashboard/DashboardPage')).DashboardPage,
+              }),
+            },
+          ],
         },
         { path: '*', element: <Navigate to="/" replace /> },
       ],
