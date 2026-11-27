@@ -1,4 +1,4 @@
-import { isErrorCode, problemDetailsSchema } from '@backoffice/contracts';
+import { type ErrorCode, isErrorCode, problemDetailsSchema } from '@backoffice/contracts';
 
 import { ApiError, NetworkError } from './errors';
 
@@ -37,10 +37,19 @@ async function toApiError(response: Response): Promise<ApiError> {
     const { code, detail, errors } = parsed.data;
     return new ApiError(response.status, code, detail, errors ?? []);
   }
-  // Not a problem document (e.g. a proxy error page): keep the status, use a generic code.
+  // Not a problem document (e.g. a proxy error page): derive the closest code from the status.
   return new ApiError(
     response.status,
-    response.status >= 500 ? 'INTERNAL_ERROR' : 'VALIDATION_FAILED',
+    codeForStatus(response.status),
     response.statusText || 'Unexpected response from the server.',
   );
+}
+
+function codeForStatus(status: number): ErrorCode {
+  if (status === 401) return 'UNAUTHENTICATED';
+  if (status === 404) return 'ROUTE_NOT_FOUND';
+  if (status === 429) return 'RATE_LIMITED';
+  if (status === 503) return 'SERVICE_UNAVAILABLE';
+  if (status >= 500) return 'INTERNAL_ERROR';
+  return 'VALIDATION_FAILED';
 }

@@ -53,6 +53,19 @@ describe('apiRequest', () => {
     });
   });
 
+  it('ERR-20 derives the closest code for non-problem error pages', async () => {
+    server.use(
+      http.get('/api/missing', () => new HttpResponse('<html>', { status: 404 })),
+      http.get('/api/busy', () => new HttpResponse('<html>', { status: 429 })),
+      http.get('/api/restarting', () => new HttpResponse('<html>', { status: 503 })),
+    );
+    await expect(apiRequest('GET', '/missing')).rejects.toMatchObject({ code: 'ROUTE_NOT_FOUND' });
+    await expect(apiRequest('GET', '/busy')).rejects.toMatchObject({ code: 'RATE_LIMITED' });
+    await expect(apiRequest('GET', '/restarting')).rejects.toMatchObject({
+      code: 'SERVICE_UNAVAILABLE',
+    });
+  });
+
   it('ERR-20 reports unreachable servers as a NetworkError', async () => {
     server.use(http.get('/api/down', () => HttpResponse.error()));
     await expect(apiRequest('GET', '/down')).rejects.toBeInstanceOf(NetworkError);
