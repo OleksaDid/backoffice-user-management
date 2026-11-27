@@ -13,7 +13,9 @@
     "test:coverage": "vitest run --coverage",
     "migrate": "node dist/migrate.js",
     "dev:migrate": "tsx --env-file-if-exists=.env src/migrate.ts",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "db:reset-demo": "node dist/reset-demo.js",
+    "dev:reset-demo": "tsx --env-file-if-exists=.env src/reset-demo.ts"
   },
   "devDependencies": {
     "@testcontainers/postgresql": "12.2.2",
