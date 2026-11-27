@@ -1,0 +1,42 @@
+# Server template for staging and production (no secrets).
+# The server operator keeps a reviewed, pinned copy and adds networks, aliases, resource
+# limits, logging and env_file entries. Deployments only change BACKOFFICE_TAG.
+# Migrations run as a one-off step before `up`: docker compose run --rm api npm run migrate
+# See deploy/README.md for commands, environment variables and rollback rules.
+
+services:
+  db:
+    image: postgres:17-alpine
+    # env_file (server): POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    image: ghcr.io/oleksadid/backoffice-user-management-api:${BACKOFFICE_TAG:?BACKOFFICE_TAG is required}
+    # env_file (server): DATABASE_URL, PUBLIC_ORIGIN and the optional variables in README
+    environment:
+      TRUST_PROXY_HOPS: '1'
+    depends_on:
+      db:
+        condition: service_healthy
+    read_only: true
+    tmpfs: [/tmp]
+    restart: unless-stopped
+
+  web:
+    image: ghcr.io/oleksadid/backoffice-user-management-web:${BACKOFFICE_TAG:?BACKOFFICE_TAG is required}
+    depends_on:
+      api:
+        condition: service_healthy
+    read_only: true
+    tmpfs: [/tmp]
+    restart: unless-stopped
+
+volumes:
+  db-data:
