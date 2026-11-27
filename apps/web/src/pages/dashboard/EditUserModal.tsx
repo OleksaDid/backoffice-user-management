@@ -4,7 +4,7 @@ import {
   type User,
 } from '@backoffice/contracts';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, Group, Modal, Stack, TextInput } from '@mantine/core';
+import { Alert, Button, Group, Stack, TextInput } from '@mantine/core';
 import { useState } from 'react';
 import { type SubmitHandler, useForm } from 'react-hook-form';
 import type { z } from 'zod';
@@ -14,21 +14,14 @@ import { FormAlert } from '../../components/FormAlert';
 import { fullName } from '../../lib/format';
 import { notifySuccess } from '../../users/notify';
 import { useUpdateProfile } from '../../users/queries';
+import { UserDialog } from './UserDialog';
 
-/**
- * DASH-30 to DASH-32. The modal stays mounted so Mantine can return focus to the
- * button that opened it (DASH-60); the form remounts per user.
- */
+/** DASH-30 to DASH-32: edit dialog (stays mounted, see UserDialog). */
 export function EditUserModal({ user, onClose }: { user: User | null; onClose: () => void }) {
   return (
-    <Modal
-      opened={user !== null}
-      onClose={onClose}
-      title={user ? `Edit ${fullName(user)}` : 'Edit user'}
-      centered
-    >
-      {user ? <EditUserForm key={user.id} user={user} onClose={onClose} /> : null}
-    </Modal>
+    <UserDialog user={user} title={(u) => `Edit ${fullName(u)}`} onClose={onClose}>
+      {(u) => <EditUserForm user={u} onClose={onClose} />}
+    </UserDialog>
   );
 }
 

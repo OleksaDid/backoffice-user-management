@@ -1,4 +1,5 @@
 import {
+  type AuthResponse,
   DEFAULT_PAGE_SIZE,
   type UpdateUserProfileBody,
   type UserStatus,
@@ -19,40 +20,46 @@ export function useUsersPage(page: number) {
   });
 }
 
-/** DASH-62: every successful change refetches the list (and the greeting, which may change). */
-function useInvalidateUsers() {
+/**
+ * DASH-62: after every change, successful or not, the list is refetched: a 404 or 409
+ * usually means someone else changed the data, and the table must show that.
+ */
+function useRefreshUsers() {
   const queryClient = useQueryClient();
-  return () =>
-    Promise.all([
-      queryClient.invalidateQueries({ queryKey: usersQueryKey }),
-      queryClient.invalidateQueries({ queryKey: sessionQueryKey }),
-    ]);
+  return () => queryClient.invalidateQueries({ queryKey: usersQueryKey });
 }
 
 export function useCreateUser() {
-  const invalidate = useInvalidateUsers();
-  return useMutation({ mutationFn: usersApi.create, onSuccess: invalidate });
+  const refresh = useRefreshUsers();
+  return useMutation({ mutationFn: usersApi.create, onSettled: refresh });
 }
 
 export function useUpdateProfile() {
-  const invalidate = useInvalidateUsers();
+  const queryClient = useQueryClient();
+  const refresh = useRefreshUsers();
   return useMutation({
     mutationFn: ({ id, body }: { id: string; body: UpdateUserProfileBody }) =>
       usersApi.updateProfile(id, body),
-    onSuccess: invalidate,
+    onSettled: async (_data, _error, { id }) => {
+      await refresh();
+      // Only your own name appears in the greeting.
+      if (queryClient.getQueryData<AuthResponse | null>(sessionQueryKey)?.user.id === id) {
+        await queryClient.invalidateQueries({ queryKey: sessionQueryKey });
+      }
+    },
   });
 }
 
 export function useSetStatus() {
-  const invalidate = useInvalidateUsers();
+  const refresh = useRefreshUsers();
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: UserStatus }) =>
       usersApi.setStatus(id, status),
-    onSuccess: invalidate,
+    onSettled: refresh,
   });
 }
 
 export function useDeleteUser() {
-  const invalidate = useInvalidateUsers();
-  return useMutation({ mutationFn: (id: string) => usersApi.remove(id), onSuccess: invalidate });
+  const refresh = useRefreshUsers();
+  return useMutation({ mutationFn: (id: string) => usersApi.remove(id), onSettled: refresh });
 }

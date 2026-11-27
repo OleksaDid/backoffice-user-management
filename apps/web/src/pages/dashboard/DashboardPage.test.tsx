@@ -193,15 +193,13 @@ describe('dashboard: create, edit, status, delete', () => {
     const api = fakeUsersApi([makeUser({ firstName: 'Grace', lastName: 'Hopper' })]);
     const { user } = await openDashboard();
 
-    const toggle = screen.getByRole('switch', { name: 'Active status of Grace Hopper' });
+    const toggle = screen.getByRole('switch', { name: /: Grace Hopper$/ });
     expect(toggle).toBeChecked();
     await user.click(toggle);
 
     expect(await screen.findByText('Grace Hopper is now inactive.')).toBeVisible();
     await waitFor(() => {
-      expect(
-        screen.getByRole('switch', { name: 'Active status of Grace Hopper' }),
-      ).not.toBeChecked();
+      expect(screen.getByRole('switch', { name: /: Grace Hopper$/ })).not.toBeChecked();
     });
     const statusCall = api.calls.find((call) => call.method === 'PUT');
     expect(statusCall).toMatchObject({ body: { status: 'inactive' } });
@@ -210,7 +208,7 @@ describe('dashboard: create, edit, status, delete', () => {
   it('DASH-41 the own status switch and delete action are disabled', async () => {
     fakeUsersApi();
     await openDashboard();
-    expect(screen.getByRole('switch', { name: 'Active status of Ada Lovelace' })).toBeDisabled();
+    expect(screen.getByRole('switch', { name: /: Ada Lovelace$/ })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Delete Ada Lovelace' })).toBeDisabled();
   });
 
@@ -219,10 +217,10 @@ describe('dashboard: create, edit, status, delete', () => {
     api.failNext('PUT', () => problem(500, 'INTERNAL_ERROR'));
     const { user } = await openDashboard();
 
-    await user.click(screen.getByRole('switch', { name: 'Active status of Grace Hopper' }));
+    await user.click(screen.getByRole('switch', { name: /: Grace Hopper$/ }));
 
     expect(await screen.findByText(/Something went wrong on our side/)).toBeVisible();
-    expect(screen.getByRole('switch', { name: 'Active status of Grace Hopper' })).toBeChecked();
+    expect(screen.getByRole('switch', { name: /: Grace Hopper$/ })).toBeChecked();
   });
 
   it('DASH-50 DASH-51 deletes after a confirmation that names the user', async () => {
@@ -260,5 +258,44 @@ describe('dashboard: create, edit, status, delete', () => {
     await waitFor(() => {
       expect(trigger).toHaveFocus();
     });
+  });
+});
+
+describe('dashboard: stale data after concurrent changes', () => {
+  it('DASH-62 refetches the list when a change fails because someone else changed the data', async () => {
+    const api = fakeUsersApi([makeUser({ firstName: 'Grace', lastName: 'Hopper' })]);
+    const { user } = await openDashboard();
+    // Another admin deletes Grace meanwhile.
+    api.users.splice(
+      api.users.findIndex((u) => u.firstName === 'Grace'),
+      1,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Delete Grace Hopper' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Delete Grace Hopper?' });
+    await user.click(within(dialog).getByRole('button', { name: 'Delete user' }));
+
+    expect(await screen.findByText('This user no longer exists.')).toBeVisible();
+    await waitFor(() => {
+      expect(screen.queryByRole('rowheader', { name: 'Grace Hopper' })).not.toBeInTheDocument();
+    });
+  });
+
+  it('DASH-14 does not clamp the page while the requested page is still loading', async () => {
+    fakeUsersApi(Array.from({ length: 13 }, () => makeUser()));
+    const { router } = await openDashboard();
+
+    await router.navigate('/?page=3');
+
+    expect(await screen.findByText('Page 3 of 3, 14 users')).toBeVisible();
+    expect(router.state.location.search).toBe('?page=3');
+  });
+
+  it('DASH-41 the explanation for the disabled own Delete reaches assistive technology', async () => {
+    fakeUsersApi();
+    await openDashboard();
+    expect(screen.getByRole('button', { name: 'Delete Ada Lovelace' })).toHaveAccessibleDescription(
+      'You cannot delete your own account',
+    );
   });
 });

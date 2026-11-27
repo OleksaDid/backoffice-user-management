@@ -1,25 +1,18 @@
 import type { User } from '@backoffice/contracts';
-import { Button, Group, Modal, Stack, Text } from '@mantine/core';
+import { Button, Group, Stack, Text } from '@mantine/core';
 
 import { messageFor } from '../../api/error-messages';
 import { fullName } from '../../lib/format';
 import { notifyError, notifySuccess } from '../../users/notify';
 import { useDeleteUser } from '../../users/queries';
+import { UserDialog } from './UserDialog';
 
-/**
- * DASH-50, DASH-51: confirmation naming the user; Cancel has the initial focus. Stays
- * mounted so focus returns to the Delete button that opened it (DASH-60).
- */
+/** DASH-50, DASH-51: confirmation naming the user; Cancel has the initial focus. */
 export function DeleteUserModal({ user, onClose }: { user: User | null; onClose: () => void }) {
   return (
-    <Modal
-      opened={user !== null}
-      onClose={onClose}
-      title={user ? `Delete ${fullName(user)}?` : 'Delete user'}
-      centered
-    >
-      {user ? <DeleteConfirmation user={user} onClose={onClose} /> : null}
-    </Modal>
+    <UserDialog user={user} title={(u) => `Delete ${fullName(u)}?`} onClose={onClose}>
+      {(u) => <DeleteConfirmation user={u} onClose={onClose} />}
+    </UserDialog>
   );
 }
 
@@ -40,15 +33,17 @@ function DeleteConfirmation({ user, onClose }: { user: User; onClose: () => void
           color="red"
           loading={deleteUser.isPending}
           onClick={() => {
-            deleteUser.mutate(user.id, {
-              onSuccess: () => {
+            // mutateAsync always settles; mutate() callbacks can be dropped when the
+            // list refetch triggered by the failure re-renders the page.
+            deleteUser.mutateAsync(user.id).then(
+              () => {
                 notifySuccess(`${name} was deleted.`);
                 onClose();
               },
-              onError: (error) => {
+              (error: unknown) => {
                 notifyError(messageFor(error));
               },
-            });
+            );
           }}
         >
           Delete user

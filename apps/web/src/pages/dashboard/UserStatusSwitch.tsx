@@ -14,13 +14,15 @@ export function UserStatusSwitch({ user, isSelf }: { user: User; isSelf: boolean
   const setStatus = useSetStatus();
   const active = user.status === 'active';
   const name = fullName(user);
+  const label = active ? 'Active' : 'Inactive';
 
   return (
     <Switch
       checked={active}
       disabled={isSelf || setStatus.isPending}
-      label={active ? 'Active' : 'Inactive'}
-      aria-label={`Active status of ${name}`}
+      label={label}
+      // The accessible name starts with the visible label (WCAG 2.5.3) and names the user.
+      aria-label={`${label}: ${name}`}
       description={isSelf ? 'Your own account' : undefined}
       onChange={(event) => {
         const status = event.currentTarget.checked ? 'active' : 'inactive';

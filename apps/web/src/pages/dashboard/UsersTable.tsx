@@ -1,5 +1,5 @@
 import type { User } from '@backoffice/contracts';
-import { Badge, Button, Group, Table } from '@mantine/core';
+import { Badge, Button, Group, Table, VisuallyHidden } from '@mantine/core';
 
 import { formatDateTime, formatFullDateTime, fullName } from '../../lib/format';
 import { UserStatusSwitch } from './UserStatusSwitch';
@@ -11,6 +11,9 @@ function DateCell({ iso }: { iso: string }) {
     </time>
   );
 }
+
+/** AUTH-30, DASH-51: the explanation must reach keyboard and screen reader users too. */
+const SELF_DELETE_HINT = 'You cannot delete your own account';
 
 interface UsersTableProps {
   users: User[];
@@ -82,13 +85,17 @@ export function UsersTable({ users, currentUserId, busy, onEdit, onDelete }: Use
                       color="red"
                       aria-label={`Delete ${name}`}
                       disabled={isSelf}
-                      title={isSelf ? 'You cannot delete your own account' : undefined}
+                      title={isSelf ? SELF_DELETE_HINT : undefined}
+                      aria-describedby={isSelf ? 'self-delete-hint' : undefined}
                       onClick={() => {
                         onDelete(user);
                       }}
                     >
                       Delete
                     </Button>
+                    {isSelf ? (
+                      <VisuallyHidden id="self-delete-hint">{SELF_DELETE_HINT}</VisuallyHidden>
+                    ) : null}
                   </Group>
                 </Table.Td>
               </Table.Tr>

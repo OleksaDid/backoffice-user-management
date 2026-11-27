@@ -75,7 +75,7 @@ test.describe('user management dashboard @full', () => {
     await expect(row(page, `${first} Goble`)).toBeVisible();
 
     // Deactivate: the name becomes locked
-    const toggle = page.getByRole('switch', { name: `Active status of ${first} Goble` });
+    const toggle = page.getByRole('switch', { name: `Active: ${first} Goble` });
     await toggle.click();
     await expect(toggle).not.toBeChecked();
     await page.getByRole('button', { name: `Edit ${first} Goble` }).click();

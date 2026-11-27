@@ -35,7 +35,8 @@ export function DashboardPage() {
   };
 
   // DASH-14: after deleting the last user of the last page, move to the new last page.
-  const totalPages = users.data?.totalPages;
+  // Only real data for this page counts, not the previous page shown while loading.
+  const totalPages = users.isPlaceholderData ? undefined : users.data?.totalPages;
   useEffect(() => {
     if (totalPages !== undefined && page > Math.max(totalPages, 1)) {
       setParams(totalPages > 1 ? { page: String(totalPages) } : {}, { replace: true });
