@@ -1,5 +1,52 @@
 # Changelog
 
+## [0.3.0](https://github.com/OleksaDid/backoffice-user-management/compare/v0.2.0...v0.3.0) (2026-11-27)
+
+
+### Features
+
+* **api:** add authentication with cookie sessions (Part 1, backend) ([#17](https://github.com/OleksaDid/backoffice-user-management/issues/17)) ([c37df99](https://github.com/OleksaDid/backoffice-user-management/commit/c37df99cf8f3a1ed319dfda3ea5c30af0e685fdf))
+* **db:** give demo users emails and a documented password ([56b13b1](https://github.com/OleksaDid/backoffice-user-management/commit/56b13b18deeb5b0c3bcd0c32885086c755ea4af5))
+* **web:** add sign-up, sign-in and welcome pages (Part 1, web) ([#19](https://github.com/OleksaDid/backoffice-user-management/issues/19)) ([28ed049](https://github.com/OleksaDid/backoffice-user-management/commit/28ed049f4bbb89ff0b18d46c5d4f010ef4ab4632))
+* **web:** add sign-up, sign-in, welcome and log out (Part 1) ([8712914](https://github.com/OleksaDid/backoffice-user-management/commit/8712914d28294a69ef8b4b131c7a7a20334313bd))
+* **web:** add the API client and frontend error handling ([0bafd09](https://github.com/OleksaDid/backoffice-user-management/commit/0bafd09b3418067d394d50179d3ffddfeb93035b))
+
+
+### Bug Fixes
+
+* **web:** derive error codes from the status for non-problem responses ([3df0231](https://github.com/OleksaDid/backoffice-user-management/commit/3df02317174c8b118204b6b89df72eca2f187f91))
+* **web:** end sessions in one place and report boundary errors once ([d92b364](https://github.com/OleksaDid/backoffice-user-management/commit/d92b3641a2dcdf39fa0c08b54cba9a521d823671))
+* **web:** meet AA contrast for secondary text and links in text ([213ffe3](https://github.com/OleksaDid/backoffice-user-management/commit/213ffe3b2ed1dd41239db7d943ba3823fce881d8))
+
+
+### Performance
+
+* **api:** authenticate requests with one query ([e90faee](https://github.com/OleksaDid/backoffice-user-management/commit/e90faee082a56a106e98ddc8a9837b850c59fbd3))
+* **api:** authenticate with one query and keep sign-in failures at 401 ([#21](https://github.com/OleksaDid/backoffice-user-management/issues/21)) ([954ef29](https://github.com/OleksaDid/backoffice-user-management/commit/954ef2944cfa233932a633eb24da8b8fb5eaa3cb))
+
+
+### Documentation
+
+* document authentication endpoints and demo sign-in ([6d255dd](https://github.com/OleksaDid/backoffice-user-management/commit/6d255dd0a7994db7b40bfccaee3ef7c9fd3a32e9))
+
+
+### Build and Deployment
+
+* run the end-to-end suite against the production images ([8b26fd7](https://github.com/OleksaDid/backoffice-user-management/commit/8b26fd7b27aaa3e6eab41e5377fb8d24317b2a91))
+
+
+### Tests
+
+* **api:** cover the sign-in race and inactive-user sessions ([5ef7a81](https://github.com/OleksaDid/backoffice-user-management/commit/5ef7a818a0ee9df67b67fa204e8e503e08d7b115))
+* **e2e:** add Playwright journeys for authentication with axe checks ([7377165](https://github.com/OleksaDid/backoffice-user-management/commit/7377165e368860c4428ca864a1ac9773aa2a6237))
+* **web:** cover the sign-up loading state and single submission ([36f8fcf](https://github.com/OleksaDid/backoffice-user-management/commit/36f8fcfc554688ba7072795e040c360ee25176e4))
+* **web:** cover the sign-up, sign-in and session flows ([b27961c](https://github.com/OleksaDid/backoffice-user-management/commit/b27961c9adc7df6d602e25c1c6e4b6a90faa1189))
+
+
+### Refactoring
+
+* **web:** fix password field accessibility once in a wrapper ([44ede6e](https://github.com/OleksaDid/backoffice-user-management/commit/44ede6ebb194ac5244dbd566d4883dfeff17fc03))
+
 ## [0.2.0](https://github.com/OleksaDid/backoffice-user-management/compare/v0.1.0...v0.2.0) (2026-11-27)
 
 
