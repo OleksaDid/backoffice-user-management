@@ -7,3 +7,4 @@ package-lock.json
 CHANGELOG.md
 .release-please-manifest.json
 **/migrations/meta
+docs/traceability.md

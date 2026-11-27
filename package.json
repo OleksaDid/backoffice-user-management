@@ -24,7 +24,10 @@
     "lint:fix": "eslint . --fix",
     "check:branch": "node scripts/check-branch-name.mjs",
     "prepare": "husky",
-    "e2e": "npm run e2e --workspace @backoffice/e2e --"
+    "e2e": "npm run e2e --workspace @backoffice/e2e --",
+    "test:coverage": "npm run test:coverage --workspaces --if-present",
+    "traceability": "node scripts/traceability.mjs",
+    "traceability:check": "node scripts/traceability.mjs --check"
   },
   "devDependencies": {
     "@commitlint/cli": "21.2.4",
