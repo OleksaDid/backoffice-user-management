@@ -49,3 +49,15 @@ export type UpdateUserProfileBody = z.infer<typeof updateUserProfileBodySchema>;
 /** USR-10: status has its own endpoint. */
 export const updateUserStatusBodySchema = z.strictObject({ status: userStatusSchema });
 export type UpdateUserStatusBody = z.infer<typeof updateUserStatusBodySchema>;
+
+/**
+ * DASH-20: the create-user dialog asks for the password twice; the confirmation is
+ * checked before any request, like sign-up (UI-AUTH-04).
+ */
+export const createUserFormSchema = createUserBodySchema
+  .extend({ confirmPassword: z.string() })
+  .refine((form) => form.password === form.confirmPassword, {
+    error: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
+export type CreateUserForm = z.input<typeof createUserFormSchema>;
