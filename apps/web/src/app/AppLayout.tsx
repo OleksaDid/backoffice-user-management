@@ -2,6 +2,7 @@ import { AppShell, Button, Container, Group, Text } from '@mantine/core';
 import { Outlet } from 'react-router';
 
 import { useSession, useSignOut } from '../auth/session';
+import { ThemeSwitcher } from '../components/ThemeSwitcher';
 import classes from './AppLayout.module.css';
 
 /**
@@ -23,17 +24,20 @@ export function AppLayout() {
             <Text component="span" fw={700} size="lg">
               Back-office
             </Text>
-            {session.data ? (
-              <Button
-                variant="default"
-                onClick={() => {
-                  signOut.mutate();
-                }}
-                loading={signOut.isPending}
-              >
-                Log out
-              </Button>
-            ) : null}
+            <Group gap="sm" wrap="nowrap">
+              <ThemeSwitcher />
+              {session.data ? (
+                <Button
+                  variant="default"
+                  onClick={() => {
+                    signOut.mutate();
+                  }}
+                  loading={signOut.isPending}
+                >
+                  Log out
+                </Button>
+              ) : null}
+            </Group>
           </Group>
         </Container>
       </AppShell.Header>

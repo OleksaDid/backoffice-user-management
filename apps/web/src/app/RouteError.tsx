@@ -12,7 +12,7 @@ export function RouteError() {
   const error = useRouteError();
 
   return (
-    <Stack gap="md" p="xl" maw={560} mx="auto" component="main">
+    <Stack gap="md" p="xl" maw={560} mx="auto">
       <PageHeading>Something went wrong</PageHeading>
       <Alert color="red" variant="light">
         {messageFor(error)}

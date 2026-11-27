@@ -3,7 +3,7 @@
 A back-office application for registering and managing users: a Fastify REST API and a React
 single-page app sharing typed contracts, backed by PostgreSQL.
 
-> Work in progress: authentication (Part 1) and the user management dashboard (Part 2) are done; themes and the final documentation follow.
+> Work in progress: Parts 1 to 3 (authentication, user management dashboard, light/dark/system themes) are done; the final testing pass and documentation follow.
 
 ## Live environments
 
