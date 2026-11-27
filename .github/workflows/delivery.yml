@@ -1,8 +1,9 @@
 name: Delivery
 
-# Every push to main: publish images -> deploy to staging -> release-please.
-# release-please runs only after staging is healthy, so a release (and the production
-# deployment it triggers, see release.yml) always refers to images that passed staging.
+# Every push to main: publish images -> deploy to staging -> full e2e on staging ->
+# release-please. release-please runs only after the e2e suite passed on staging, so a
+# release (and the production deployment it triggers, see release.yml) always refers to
+# images that were tested end to end in a real environment.
 on:
   push:
     branches: [main]
@@ -65,9 +66,38 @@ jobs:
       url: https://test-staging.oleksa.live
     secrets: inherit
 
+  # The full end-to-end suite against the deployed staging environment, in all three
+  # browsers. A release (and therefore production) only follows a passing run.
+  e2e-staging:
+    name: E2E on staging
+    needs: deploy-staging
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install end-to-end test dependencies
+        run: |
+          npm ci --workspace @backoffice/e2e --include-workspace-root --ignore-scripts
+          npx --workspace @backoffice/e2e playwright install --with-deps chromium firefox webkit
+      - name: End-to-end tests against staging
+        run: npm run e2e --workspace @backoffice/e2e -- --trace off --workers 2
+        env:
+          E2E_BASE_URL: https://test-staging.oleksa.live
+      - name: Upload the Playwright report
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: playwright-report-staging
+          path: e2e/playwright-report
+          retention-days: 7
+
   release-please:
     name: Release PR
-    needs: deploy-staging
+    needs: e2e-staging
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
