@@ -1,4 +1,4 @@
-import { createTheme } from '@mantine/core';
+import { Anchor, type CSSVariablesResolver, createTheme } from '@mantine/core';
 
 /**
  * Design tokens. Mantine exposes them as CSS variables, so components and our own CSS
@@ -26,4 +26,18 @@ export const theme = createTheme({
   defaultRadius: 'md',
   focusRing: 'auto',
   respectReducedMotion: true,
+  components: {
+    // WCAG 1.4.1: links inside text must not rely on colour alone (axe link-in-text-block).
+    Anchor: Anchor.extend({ defaultProps: { underline: 'always' } }),
+  },
+});
+
+/**
+ * Mantine's default "dimmed" grey (#868e96) is 3.3:1 on white, below the 4.5:1 AA
+ * minimum for normal text (found by the axe check). Use darker/lighter greys instead.
+ */
+export const cssVariablesResolver: CSSVariablesResolver = (current) => ({
+  variables: {},
+  light: { '--mantine-color-dimmed': current.colors.gray[7] },
+  dark: { '--mantine-color-dimmed': current.colors.gray[4] },
 });

@@ -9,7 +9,7 @@ import { RouterProvider } from 'react-router/dom';
 
 import { createQueryClient } from './app/query-client';
 import { createRoutes } from './app/routes';
-import { theme } from './app/theme';
+import { cssVariablesResolver, theme } from './app/theme';
 import { sessionQueryKey } from './auth/session';
 import { consoleErrorReporter, installGlobalErrorHandlers } from './infra/error-reporter';
 import type { SignInState } from './pages/SignInPage';
@@ -43,7 +43,7 @@ createRoot(root, {
   },
 }).render(
   <StrictMode>
-    <MantineProvider theme={theme}>
+    <MantineProvider theme={theme} cssVariablesResolver={cssVariablesResolver}>
       <QueryClientProvider client={queryClient}>
         <RouterProvider router={router} />
       </QueryClientProvider>

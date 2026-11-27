@@ -10,7 +10,7 @@ import { vi } from 'vitest';
 
 import { createQueryClient } from '../app/query-client';
 import { createRoutes } from '../app/routes';
-import { theme } from '../app/theme';
+import { cssVariablesResolver, theme } from '../app/theme';
 import { sessionQueryKey } from '../auth/session';
 import { server } from './server';
 
@@ -63,7 +63,7 @@ export function renderApp(path = '/') {
   });
   const user = userEvent.setup();
   const view = render(
-    <MantineProvider theme={theme}>
+    <MantineProvider theme={theme} cssVariablesResolver={cssVariablesResolver}>
       <QueryClientProvider client={queryClient}>
         <RouterProvider router={router} />
       </QueryClientProvider>
