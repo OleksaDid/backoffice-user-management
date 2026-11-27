@@ -1,8 +1,8 @@
 import { screen, waitFor } from '@testing-library/react';
-import { readFileSync } from 'node:fs';
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+// Imported through Vite as text, so the test works from any working directory.
+import themeInitScript from '../../public/theme-init.js?raw';
 import { THEME_STORAGE_KEY } from '../app/theme-preference';
 import { fakeUsersApi } from '../test/fake-users-api';
 import { mockSession, renderApp } from '../test/render-app';
@@ -87,8 +87,6 @@ describe('theme switcher', () => {
 
 describe('theme init script', () => {
   it('THEME-04 reads the same storage key as the app', () => {
-    // Tests run from the web workspace root.
-    const script = readFileSync('public/theme-init.js', 'utf8');
-    expect(script).toContain(`'${THEME_STORAGE_KEY}'`);
+    expect(themeInitScript).toContain(`'${THEME_STORAGE_KEY}'`);
   });
 });
