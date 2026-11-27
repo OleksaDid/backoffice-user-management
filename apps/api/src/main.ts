@@ -5,6 +5,10 @@ import { ConfigError, loadConfig } from './config/env.js';
 import { createDatabase } from './db/client.js';
 import { createReadinessProbe } from './db/migrations.js';
 import { LoggerErrorReporter } from './infra/error-reporter.js';
+import { createUnitOfWork } from './repositories/unit-of-work.js';
+import { systemClock } from './services/clock.js';
+import { SessionService } from './services/session-service.js';
+import { UserService } from './services/user-service.js';
 import { createLogger } from './infra/logger.js';
 
 /** Process entry point: wires real dependencies and owns the process lifecycle. */
@@ -31,11 +35,16 @@ async function main(): Promise<void> {
     },
   });
 
+  const uow = createUnitOfWork(database.db);
   const app = await buildApp({
     config,
     logger,
     errorReporter,
     readinessProbe: createReadinessProbe(database.db),
+    services: {
+      users: new UserService(uow, systemClock),
+      sessions: new SessionService(uow, systemClock, config.SESSION_TTL_HOURS),
+    },
   });
 
   // ERR-13, NFR-32: on SIGTERM/SIGINT stop accepting connections, finish in-flight

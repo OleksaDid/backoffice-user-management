@@ -1,13 +1,31 @@
 import { pino } from 'pino';
 import { vi } from 'vitest';
 
-import { buildApp } from '../../src/app.js';
+import { type AppDependencies, buildApp } from '../../src/app.js';
 import type { ReadinessProbe } from '../../src/http/routes/health.js';
 import type { ErrorReporter } from '../../src/infra/error-reporter.js';
 
 export interface TestAppOptions {
   readinessProbe?: ReadinessProbe;
+  services?: AppDependencies['services'];
 }
+
+/** Stands in for a service in tests that never reach domain endpoints: any call is a test bug. */
+function unusedService(name: string): never {
+  return new Proxy(
+    {},
+    {
+      get: (_target, method) => () => {
+        throw new Error(`${name}.${String(method)} called on a test app built without services`);
+      },
+    },
+  ) as never;
+}
+
+const unusedServices: AppDependencies['services'] = {
+  users: unusedService('users'),
+  sessions: unusedService('sessions'),
+};
 
 /** Builds the app with silent logging, a spy reporter and a healthy probe by default. */
 export async function buildTestApp(options: TestAppOptions = {}) {
@@ -18,6 +36,7 @@ export async function buildTestApp(options: TestAppOptions = {}) {
     errorReporter,
     readinessProbe:
       options.readinessProbe ?? (() => Promise.resolve({ database: true, migrations: true })),
+    services: options.services ?? unusedServices,
   });
   return { app, errorReporter };
 }
