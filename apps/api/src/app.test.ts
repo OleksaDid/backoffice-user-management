@@ -19,7 +19,7 @@ describe('health', () => {
   it('HLT-01 liveness answers while the process runs', async () => {
     const response = await (await start()).inject({ url: '/api/health/live' });
     expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual({ status: 'ok' });
+    expect(response.json()).toEqual({ status: 'ok', revision: 'test-revision' });
   });
 
   it('HLT-01 NFR-31 readiness is 200 when the database is reachable and migrated', async () => {

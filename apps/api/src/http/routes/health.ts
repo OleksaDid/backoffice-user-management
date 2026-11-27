@@ -20,18 +20,19 @@ const readinessSchema = z.object({
  * (database reachable and all migrations applied). Used by container health checks.
  */
 export const healthRoutes =
-  (probe: ReadinessProbe): FastifyPluginCallbackZod =>
+  (probe: ReadinessProbe, revision: string): FastifyPluginCallbackZod =>
   (app, _options, done) => {
     app.get(
       '/health/live',
       {
         schema: {
           tags: ['health'],
-          summary: 'Liveness probe',
-          response: { 200: z.object({ status: z.literal('ok') }) },
+          summary: 'Liveness probe, with the revision of the running image',
+          response: { 200: z.object({ status: z.literal('ok'), revision: z.string() }) },
         },
       },
-      () => ({ status: 'ok' as const }),
+      // The revision lets a deployment check that the new image, not the old, is serving.
+      () => ({ status: 'ok' as const, revision }),
     );
 
     app.get(

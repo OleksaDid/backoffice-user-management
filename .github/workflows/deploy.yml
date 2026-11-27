@@ -17,6 +17,10 @@ on:
         description: Public URL used for the smoke test
         required: true
         type: string
+      revision:
+        description: Git commit the deployed images were built from
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -64,10 +68,13 @@ jobs:
         id: smoke
         env:
           PUBLIC_URL: ${{ inputs.url }}
+          EXPECTED_REVISION: ${{ inputs.revision }}
+        # Ready, serving the SPA, and running the new image (not the old one left behind).
         run: |
           for _ in $(seq 1 12); do
             if curl --fail --silent --show-error "$PUBLIC_URL/api/health/ready" \
-              && curl --fail --silent --output /dev/null "$PUBLIC_URL/"; then
+              && curl --fail --silent --output /dev/null "$PUBLIC_URL/" \
+              && curl --fail --silent "$PUBLIC_URL/api/health/live" | grep -q "\"revision\":\"$EXPECTED_REVISION\""; then
               exit 0
             fi
             sleep 5

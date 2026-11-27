@@ -28,7 +28,10 @@ RUN --mount=type=cache,target=/root/.npm \
     npm ci --workspace @backoffice/api --omit=dev --ignore-scripts --no-audit
 
 FROM ${NODE_IMAGE} AS runtime
+# Git commit of the build, reported by /api/health/live (CI passes it; local builds say dev).
+ARG REVISION=dev
 ENV NODE_ENV=production \
+    APP_REVISION=${REVISION} \
     # Fits the 512 MB container limit with headroom for buffers and native memory.
     NODE_OPTIONS=--max-old-space-size=384 \
     # Lets `npm run migrate` work on a read-only root filesystem (only /tmp is writable).
