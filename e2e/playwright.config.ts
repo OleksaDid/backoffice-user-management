@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices, type Project } from '@playwright/test';
 
 /**
  * End-to-end tests run against a running stack: the Compose stack in CI
@@ -16,8 +16,12 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
-  // NFR-50: the three engines users run. Locally E2E_BROWSERS=chromium keeps runs fast.
-  projects: [
+  projects: selectedProjects(),
+});
+
+/** NFR-50: the three engines users run; E2E_BROWSERS=chromium keeps local runs fast. */
+function selectedProjects(): Project[] {
+  const all: Project[] = [
     {
       name: 'chromium',
       use: {
@@ -30,8 +34,14 @@ export default defineConfig({
     },
     { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
     { name: 'webkit', use: { ...devices['Desktop Safari'] } },
-  ].filter(
-    (project) =>
-      !process.env.E2E_BROWSERS || process.env.E2E_BROWSERS.split(',').includes(project.name),
-  ),
-});
+  ];
+  const wanted = process.env.E2E_BROWSERS?.split(',').map((name) => name.trim());
+  if (!wanted) return all;
+  const selected = all.filter((project) => wanted.includes(project.name ?? ''));
+  if (selected.length !== wanted.length) {
+    throw new Error(
+      `E2E_BROWSERS must list chromium, firefox and/or webkit; got "${wanted.join(',')}"`,
+    );
+  }
+  return selected;
+}

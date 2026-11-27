@@ -4,8 +4,9 @@
 // keeps the matrix honest. Usage: node scripts/traceability.mjs [--check]
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = new URL('..', import.meta.url).pathname;
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const OUTPUT = join(ROOT, 'docs/traceability.md');
 const ID = /\b(?:UI-AUTH|USR|SES|AUTH|DASH|THEME|ERR|HLT|API|DATA|NFR)-\d{2}\b/g;
 
@@ -13,7 +14,12 @@ function walk(dir, accept) {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const path = join(dir, entry.name);
     if (entry.isDirectory()) {
-      return ['node_modules', 'dist', 'coverage'].includes(entry.name) ? [] : walk(path, accept);
+      const skip =
+        entry.name.startsWith('.') ||
+        ['node_modules', 'dist', 'coverage', 'playwright-report', 'test-results'].includes(
+          entry.name,
+        );
+      return skip ? [] : walk(path, accept);
     }
     return accept(path) ? [path] : [];
   });
@@ -46,7 +52,8 @@ function levelOf(file) {
 function testReferences() {
   const files = walk(ROOT, (path) => /\.(test|spec)\.tsx?$/.test(path));
   const references = [];
-  const title = /\b(?:it|test)(?:\.todo)?\(\s*(['"`])((?:(?!\1).)+)\1/g;
+  // Pending tests (it.todo / it.skip) do not verify anything, so they are not counted.
+  const title = /\b(?:it|test)\(\s*(['"`])((?:(?!\1).)+)\1/g;
   for (const file of files) {
     const text = readFileSync(file, 'utf8');
     for (const [, , name] of text.matchAll(title)) {
@@ -77,7 +84,12 @@ function render() {
   const ids = specIds();
   const refs = testReferences();
   const byId = new Map([...ids.keys()].map((id) => [id, []]));
-  for (const ref of refs) byId.get(ref.id)?.push(ref);
+  const unknown = [];
+  for (const ref of refs) {
+    const list = byId.get(ref.id);
+    if (list) list.push(ref);
+    else unknown.push(`${ref.id} in ${ref.file}`);
+  }
 
   const untested = [...byId].filter(([, list]) => list.length === 0).map(([id]) => id);
   const lines = [
@@ -121,10 +133,16 @@ function render() {
     }
   }
   lines.push('');
-  return { text: lines.join('\n'), untested };
+  return { text: lines.join('\n'), untested, unknown };
 }
 
-const { text, untested } = render();
+const { text, untested, unknown } = render();
+if (unknown.length > 0) {
+  process.stderr.write(
+    `Test titles reference IDs that are not in the spec:\n  ${unknown.join('\n  ')}\n`,
+  );
+  process.exit(1);
+}
 if (process.argv.includes('--check')) {
   const current = readFileSync(OUTPUT, 'utf8');
   if (current !== text) {
