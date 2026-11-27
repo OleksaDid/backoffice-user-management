@@ -68,6 +68,8 @@ test.describe('authentication @full', () => {
     const user = newUser();
     await signUp(page, user);
     await page.getByRole('button', { name: 'Log out' }).click();
+    // Wait for sign-out to finish; otherwise the next page still sees the session.
+    await expect(page).toHaveURL(/\/sign-in$/);
 
     await signIn(page, { ...user, password: 'not the password' });
 
@@ -78,6 +80,8 @@ test.describe('authentication @full', () => {
     const user = newUser();
     await signUp(page, user);
     await page.getByRole('button', { name: 'Log out' }).click();
+    // Wait for sign-out to finish; otherwise the next page still sees the session.
+    await expect(page).toHaveURL(/\/sign-in$/);
 
     await signUp(page, { ...user, firstName: 'Other' });
 
