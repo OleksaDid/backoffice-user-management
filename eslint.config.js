@@ -59,6 +59,11 @@ export default tseslint.config(
     ...reactHooks.configs.flat.recommended,
   },
   {
+    // Static scripts served as-is to the browser (theme-init.js).
+    files: ['apps/web/public/**/*.js'],
+    languageOptions: { globals: { ...globals.browser }, sourceType: 'script' },
+  },
+  {
     // Plain JS config files are not part of any tsconfig project.
     files: ['**/*.{js,mjs,cjs}'],
     ...tseslint.configs.disableTypeChecked,
