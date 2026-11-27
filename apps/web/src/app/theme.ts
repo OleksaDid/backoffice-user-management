@@ -1,4 +1,4 @@
-import { Anchor, type CSSVariablesResolver, createTheme } from '@mantine/core';
+import { Anchor, type CSSVariablesResolver, createTheme, Modal } from '@mantine/core';
 
 /**
  * Design tokens. Mantine exposes them as CSS variables, so components and our own CSS
@@ -29,6 +29,8 @@ export const theme = createTheme({
   components: {
     // WCAG 1.4.1: links inside text must not rely on colour alone (axe link-in-text-block).
     Anchor: Anchor.extend({ defaultProps: { underline: 'always' } }),
+    // WCAG 4.1.2: the dialog close button has no accessible name by default (axe button-name).
+    Modal: Modal.extend({ defaultProps: { closeButtonProps: { 'aria-label': 'Close dialog' } } }),
   },
 });
 
