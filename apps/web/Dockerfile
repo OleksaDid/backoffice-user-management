@@ -15,7 +15,7 @@ RUN npm run build --workspace @backoffice/web \
     # Normalise permissions: the build context may come from a checkout with a strict umask.
     && chmod -R a+rX apps/web/dist apps/web/nginx
 
-FROM nginxinc/nginx-unprivileged:1.30-alpine AS runtime
+FROM nginxinc/nginx-unprivileged:1.31-alpine AS runtime
 COPY --from=build /app/apps/web/nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/apps/web/nginx/security-headers.conf /etc/nginx/snippets/security-headers.conf
 COPY --from=build /app/apps/web/dist /usr/share/nginx/html
