@@ -10,12 +10,19 @@
     "start": "node dist/main.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "migrate": "node dist/migrate.js",
+    "dev:migrate": "tsx --env-file-if-exists=.env src/migrate.ts",
+    "db:generate": "drizzle-kit generate"
   },
   "devDependencies": {
+    "@testcontainers/postgresql": "12.2.2",
+    "@types/pg": "8.23.1",
     "@vitest/coverage-v8": "5.1.2",
+    "drizzle-kit": "0.31.11",
     "esbuild": "0.28.2",
     "pino-pretty": "13.2.0",
+    "testcontainers": "12.2.2",
     "tsx": "4.23.15",
     "vitest": "5.1.2"
   },
@@ -25,8 +32,10 @@
     "@fastify/swagger": "9.9.5",
     "@fastify/swagger-ui": "6.1.5",
     "close-with-grace": "2.5.0",
+    "drizzle-orm": "0.45.4",
     "fastify": "5.12.8",
     "fastify-type-provider-zod": "7.0.0",
+    "pg": "8.23.1",
     "pino": "10.4.0",
     "zod": "4.6.7"
   }
