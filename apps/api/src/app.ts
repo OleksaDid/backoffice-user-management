@@ -15,8 +15,12 @@ import type { Logger } from 'pino';
 import type { Config } from './config/env.js';
 import { registerErrorHandling } from './http/error-handler.js';
 import { healthRoutes, type ReadinessProbe } from './http/routes/health.js';
+import { sessionRoutes } from './http/routes/sessions.js';
+import { userRoutes } from './http/routes/users.js';
 import type { App } from './http/types.js';
 import type { ErrorReporter } from './infra/error-reporter.js';
+import type { SessionService } from './services/session-service.js';
+import type { UserService } from './services/user-service.js';
 
 export const API_PREFIX = '/api';
 
@@ -25,6 +29,10 @@ export interface AppDependencies {
   logger: Logger;
   errorReporter: ErrorReporter;
   readinessProbe: ReadinessProbe;
+  services: {
+    users: UserService;
+    sessions: SessionService;
+  };
 }
 
 const REQUEST_ID_PATTERN = /^[\w-]{8,128}$/;
@@ -78,6 +86,8 @@ export async function buildApp(deps: AppDependencies): Promise<App> {
   await app.register(swaggerUi, { routePrefix: `${API_PREFIX}/docs` });
 
   await app.register(healthRoutes(deps.readinessProbe), { prefix: API_PREFIX });
+  await app.register(userRoutes(deps.services.users), { prefix: API_PREFIX });
+  await app.register(sessionRoutes(deps.services.sessions), { prefix: API_PREFIX });
 
   return app;
 }

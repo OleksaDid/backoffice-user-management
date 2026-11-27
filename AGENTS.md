@@ -40,6 +40,7 @@ docker compose -f compose.yaml -f compose.dev.yaml up -d db   # database only, f
 npm run dev -w @backoffice/api           # API with reload (copy apps/api/.env.example to .env)
 npm run dev -w @backoffice/web           # web dev server on :5173, proxies /api to :3000
 npm run dev:migrate -w @backoffice/api   # apply migrations in dev
+npm run dev:reset-demo -w @backoffice/api  # replace data with 20 demo users
 npm run db:generate -w @backoffice/api -- --name <change>   # new migration from schema.ts
 ```
 

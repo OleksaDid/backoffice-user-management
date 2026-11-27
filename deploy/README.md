@@ -31,7 +31,7 @@ idempotent and exit non-zero on failure.
 | Purpose                   | Command                                             | Available from |
 | ------------------------- | --------------------------------------------------- | -------------- |
 | Apply pending migrations  | `docker compose run --rm api npm run migrate`       | first image    |
-| Reset demo data (nightly) | `docker compose run --rm api npm run db:reset-demo` | `v0.1.0`       |
+| Reset demo data (nightly) | `docker compose run --rm api npm run db:reset-demo` | `v0.2.0`       |
 
 `db:reset-demo` deletes all users and sessions and inserts a fixed set of demo users. It never
 touches the schema.
@@ -45,13 +45,13 @@ Values are not listed on purpose; secrets are generated on the server.
 | Variable              | Required      | Purpose                                                                       | Format / default                        |
 | --------------------- | ------------- | ----------------------------------------------------------------------------- | --------------------------------------- |
 | `DATABASE_URL`        | yes           | PostgreSQL connection (secret: contains the password)                         | `postgres://user:pass@db:5432/name`     |
-| `PUBLIC_ORIGIN`       | from `v0.2.0` | Public origin; state-changing requests from other origins are rejected (CSRF) | `https://test.oleksa.live`              |
+| `PUBLIC_ORIGIN`       | from `v0.3.0` | Public origin; state-changing requests from other origins are rejected (CSRF) | `https://test.oleksa.live`              |
 | `TRUST_PROXY_HOPS`    | no            | Proxies whose `X-Forwarded-*` headers are trusted (`web` = 1)                 | integer, default `0`; template sets `1` |
 | `NODE_ENV`            | no            | Runtime mode                                                                  | `production` (set in the image)         |
 | `LOG_LEVEL`           | no            | Log verbosity                                                                 | `info` (default), `warn`, `debug`, ...  |
 | `DATABASE_POOL_MAX`   | no            | Maximum database connections                                                  | integer 1 to 100, default `10`          |
 | `SHUTDOWN_TIMEOUT_MS` | no            | Time to drain requests on `SIGTERM`                                           | milliseconds, default `10000`           |
-| `SESSION_TTL_HOURS`   | no            | Absolute session lifetime (from `v0.1.0`)                                     | integer, default `168` (7 days)         |
+| `SESSION_TTL_HOURS`   | no            | Absolute session lifetime (from `v0.2.0`)                                     | integer, default `168` (7 days)         |
 | `HOST`, `PORT`        | no            | Listen address                                                                | `0.0.0.0`, `3000`                       |
 
 There is no signing secret: the session id is a random UUID stored in the database, sent in an
@@ -91,9 +91,9 @@ follow expand/contract (spec 06, DATA-02):
 - constraints are tightened only in a later release, once no supported image writes data that
   would violate them.
 
-Planned schema steps: `v0.1.0` creates the schema; `v0.2.0` adds nullable `email` and a
-credentials table (a `v0.1.0` image keeps working); `v0.3.0` makes `email` required (a `v0.2.0`
-image keeps working, a `v0.1.0` image would not). Rolling back more than one release across a
+Planned schema steps: `v0.1.0` creates the schema; `v0.3.0` adds nullable `email` and a
+credentials table (a `v0.2.0` image keeps working); `v0.4.0` makes `email` required (a `v0.3.0`
+image keeps working, a `v0.2.0` image would not). Rolling back more than one release across a
 contract migration is not supported.
 
 ## Proxy and caching

@@ -38,8 +38,8 @@ Part 1 adds `email` (see [02](02-authentication.md)).
 
 ### Update a user's profile
 
-- **USR-07** `PATCH /api/users/:id` with `firstName` and/or `lastName` (at least one) updates the
-  profile and returns `200` with the user.
+- **USR-07** `PATCH /api/users/:id` with both `firstName` and `lastName` (each required, same rules
+  as on creation) updates the profile and returns `200` with the user.
 - **USR-08** Only `firstName` and `lastName` are accepted. Any other field, including `status`,
   `createdAt` and `id`, is rejected with `400 VALIDATION_FAILED`. Status has its own endpoint
   (USR-10), so a single request can never change both profile and status.

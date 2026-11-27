@@ -2,3 +2,6 @@
 // Schemas are added together with the behaviour they describe (see docs/spec).
 export * from './errors/catalog.js';
 export * from './errors/problem.js';
+export * from './pagination.js';
+export * from './sessions.js';
+export * from './users.js';

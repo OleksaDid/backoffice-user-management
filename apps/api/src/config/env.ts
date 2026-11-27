@@ -18,6 +18,13 @@ export const envSchema = z.object({
   /** Number of reverse proxies in front of the API whose X-Forwarded-* headers are trusted. */
   TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(0),
   SHUTDOWN_TIMEOUT_MS: z.coerce.number().int().min(1000).max(60_000).default(10_000),
+  /** Absolute session lifetime (spec 01, Session). */
+  SESSION_TTL_HOURS: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(24 * 90)
+    .default(168),
 });
 
 export type Config = z.infer<typeof envSchema>;
