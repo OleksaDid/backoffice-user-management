@@ -1,0 +1,26 @@
+{
+  "name": "backoffice-user-management",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Back-office user management: Fastify REST API and React SPA in one npm workspaces monorepo.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0",
+    "npm": ">=10"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*",
+    "e2e"
+  ],
+  "scripts": {
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.4",
+    "typescript": "5.9.3"
+  }
+}
