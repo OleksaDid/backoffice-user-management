@@ -13,9 +13,10 @@ export interface UserEntity {
   updatedAt: Date;
 }
 
+/** Omitted (or undefined) fields are left unchanged. */
 export interface ProfilePatch {
-  firstName?: string;
-  lastName?: string;
+  firstName?: string | undefined;
+  lastName?: string | undefined;
 }
 
 /** Changes written by an update. `createdAt` is deliberately not part of it (USR-12). */
