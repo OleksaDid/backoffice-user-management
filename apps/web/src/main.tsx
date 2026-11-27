@@ -4,29 +4,18 @@ import { MantineProvider } from '@mantine/core';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createBrowserRouter } from 'react-router';
-import { RouterProvider } from 'react-router/dom';
+import { createBrowserRouter, RouterProvider } from 'react-router';
 
 import { createQueryClient } from './app/query-client';
 import { createRoutes } from './app/routes';
 import { cssVariablesResolver, theme } from './app/theme';
-import { sessionQueryKey } from './auth/session';
 import { consoleErrorReporter, installGlobalErrorHandlers } from './infra/error-reporter';
-import type { SignInState } from './pages/SignInPage';
 
 const reporter = consoleErrorReporter;
 installGlobalErrorHandlers(reporter);
 
-const router = createBrowserRouter(createRoutes(reporter));
-const queryClient = createQueryClient({
-  reporter,
-  // UI-AUTH-12: the session ended elsewhere (expired, terminated, user deactivated).
-  onUnauthorized: () => {
-    queryClient.setQueryData(sessionQueryKey, null);
-    const state: SignInState = { notice: 'session-ended' };
-    void router.navigate('/sign-in', { replace: true, state });
-  },
-});
+const router = createBrowserRouter(createRoutes());
+const queryClient = createQueryClient(reporter);
 
 const root = document.getElementById('root');
 if (!root) {
@@ -34,7 +23,8 @@ if (!root) {
 }
 
 createRoot(root, {
-  // ERR-22/23: errors React catches in boundaries are reported too.
+  // ERR-22/23: the one place where errors caught by boundaries (including the route
+  // error page) and uncaught render errors are reported.
   onCaughtError: (error, info) => {
     reporter.report(error, { source: 'boundary', componentStack: info.componentStack });
   },

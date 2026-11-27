@@ -57,34 +57,54 @@ describe('session flow', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Sign in' })).toBeVisible();
   });
 
-  it('UI-AUTH-12 a 401 from any request ends the session in the app', async () => {
-    const onUnauthorized = vi.fn();
-    const reporter = { report: vi.fn() };
-    const client = createQueryClient({ onUnauthorized, reporter });
+  it('UI-AUTH-12 a 401 from any request ends the session and explains it on sign-in', async () => {
+    mockSession(adaAuth);
+    const { queryClient, router, reporter } = renderApp('/');
+    await screen.findByRole('heading', { name: 'Hello Ada' });
 
-    await client
+    // Any protected request that finds the session gone, e.g. the users list in Part 2.
+    await queryClient
       .query({
         queryKey: ['users'],
         queryFn: () => Promise.reject(new ApiError(401, 'UNAUTHENTICATED', 'gone')),
       })
       .catch(() => undefined);
 
-    expect(onUnauthorized).toHaveBeenCalledOnce();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Sign in' })).toBeVisible();
+    expect(router.state.location.pathname).toBe('/sign-in');
+    expect(screen.getByText('Your session has ended. Please sign in again.')).toBeVisible();
     expect(reporter.report).not.toHaveBeenCalled();
   });
 
   it('ERR-23 unexpected errors are reported, expected ones are not', async () => {
     const reporter = { report: vi.fn() };
-    const client = createQueryClient({ onUnauthorized: vi.fn(), reporter });
+    const client = createQueryClient(reporter);
 
     for (const error of [new ApiError(404, 'USER_NOT_FOUND', 'x'), new TypeError('bug')]) {
       await client
-        .query({ queryKey: [error.message], queryFn: () => Promise.reject(error) })
+        .query({ queryKey: [error.message], queryFn: () => Promise.reject(error), retry: false })
         .catch(() => undefined);
     }
 
     expect(reporter.report).toHaveBeenCalledOnce();
     expect(reporter.report).toHaveBeenCalledWith(expect.any(TypeError), { source: 'query' });
+  });
+
+  it('UI-AUTH-01 a failing session check offers a retry instead of breaking the app', async () => {
+    let calls = 0;
+    server.use(
+      http.get('/api/auth/me', () => {
+        calls += 1;
+        return calls <= 3 ? problem(503, 'SERVICE_UNAVAILABLE') : HttpResponse.json(adaAuth);
+      }),
+    );
+    const { user } = renderApp('/');
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/temporarily unavailable/);
+    await user.click(screen.getByRole('button', { name: 'Try again' }));
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Hello Ada' })).toBeVisible();
+    expect(calls).toBe(4);
   });
 
   it('DASH-02 renders landmarks and a skip link to the main content', async () => {

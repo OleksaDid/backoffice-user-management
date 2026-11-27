@@ -4,14 +4,12 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { createMemoryRouter } from 'react-router';
-import { RouterProvider } from 'react-router/dom';
+import { createMemoryRouter, RouterProvider } from 'react-router';
 import { vi } from 'vitest';
 
 import { createQueryClient } from '../app/query-client';
 import { createRoutes } from '../app/routes';
 import { cssVariablesResolver, theme } from '../app/theme';
-import { sessionQueryKey } from '../auth/session';
 import { server } from './server';
 
 export const adaAuth: AuthResponse = {
@@ -50,16 +48,15 @@ export function mockSession(auth: AuthResponse | null) {
   );
 }
 
-/** Renders the whole app (real routes, guards and query client) at `path`. */
+/** Renders the whole app with the production routes, guards and query client at `path`. */
 export function renderApp(path = '/') {
   const reporter = { report: vi.fn() };
-  const router = createMemoryRouter(createRoutes(reporter), { initialEntries: [path] });
-  const queryClient = createQueryClient({
-    reporter,
-    onUnauthorized: () => {
-      queryClient.setQueryData(sessionQueryKey, null);
-      void router.navigate('/sign-in', { replace: true, state: { notice: 'session-ended' } });
-    },
+  const router = createMemoryRouter(createRoutes(), { initialEntries: [path] });
+  const queryClient = createQueryClient(reporter);
+  // Keep the production retry policy but without the backoff delay.
+  queryClient.setDefaultOptions({
+    ...queryClient.getDefaultOptions(),
+    queries: { ...queryClient.getDefaultOptions().queries, retryDelay: 0 },
   });
   const user = userEvent.setup();
   const view = render(
