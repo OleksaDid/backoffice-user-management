@@ -1,9 +1,10 @@
 import { screen, waitFor, within } from '@testing-library/react';
+import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 
 import { fakeUsersApi, makeUser } from '../../test/fake-users-api';
 import { adaAuth, mockSession, problem, renderApp } from '../../test/render-app';
-import { setupMockServer } from '../../test/server';
+import { server, setupMockServer } from '../../test/server';
 
 setupMockServer();
 
@@ -297,5 +298,73 @@ describe('dashboard: stale data after concurrent changes', () => {
     expect(screen.getByRole('button', { name: 'Delete Ada Lovelace' })).toHaveAccessibleDescription(
       'You cannot delete your own account',
     );
+  });
+});
+
+describe('dashboard: review follow-ups', () => {
+  it('DASH-15 a failed background refresh keeps the rows and warns that they may be stale', async () => {
+    const api = fakeUsersApi([makeUser({ firstName: 'Grace', lastName: 'Hopper' })]);
+    const { user } = await openDashboard();
+    let failRefresh = true;
+    server.use(
+      http.get('/api/users', () => (failRefresh ? problem(503, 'SERVICE_UNAVAILABLE') : undefined)),
+    );
+
+    // A successful change triggers a refresh, which fails.
+    await user.click(screen.getByRole('switch', { name: /: Grace Hopper$/ }));
+
+    expect(await screen.findByText('The list may be out of date')).toBeVisible();
+    expect(screen.getByRole('rowheader', { name: 'Grace Hopper' })).toBeVisible();
+
+    failRefresh = false;
+    await user.click(screen.getByRole('button', { name: 'Retry' }));
+    await waitFor(() => {
+      expect(screen.queryByText('The list may be out of date')).not.toBeInTheDocument();
+    });
+    expect(api.users).toHaveLength(2);
+  });
+
+  it('DASH-40 the switch name starts with its visible label (WCAG 2.5.3)', async () => {
+    fakeUsersApi([makeUser({ firstName: 'Grace', lastName: 'Hopper' })]);
+    const { user } = await openDashboard();
+
+    const toggle = screen.getByRole('switch', { name: 'Active: Grace Hopper' });
+    expect(toggle.closest('label') ?? document.body).toHaveTextContent('Active');
+    await user.click(toggle);
+
+    expect(await screen.findByRole('switch', { name: 'Inactive: Grace Hopper' })).not.toBeChecked();
+    expect(screen.getByText('Inactive')).toBeVisible();
+  });
+
+  it('DASH-62 refreshes the greeting only after editing your own name', async () => {
+    fakeUsersApi([makeUser({ firstName: 'Grace', lastName: 'Hopper' })]);
+    let meCalls = 0;
+    let firstName = 'Ada';
+    server.use(
+      http.get('/api/auth/me', () => {
+        meCalls += 1;
+        return HttpResponse.json({ ...adaAuth, user: { ...adaAuth.user, firstName } });
+      }),
+    );
+    const { user } = renderApp('/');
+    await screen.findByRole('table', {}, { timeout: 5000 });
+    const callsAfterLoad = meCalls;
+
+    await user.click(screen.getByRole('button', { name: 'Edit Grace Hopper' }));
+    await user.click(
+      within(await screen.findByRole('dialog')).getByRole('button', { name: 'Save changes' }),
+    );
+    await screen.findByText('Grace Hopper was updated.');
+    expect(meCalls).toBe(callsAfterLoad);
+
+    firstName = 'Augusta';
+    await user.click(screen.getByRole('button', { name: 'Edit Ada Lovelace' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Edit Ada Lovelace' });
+    await user.clear(within(dialog).getByLabelText(/^First name/));
+    await user.type(within(dialog).getByLabelText(/^First name/), 'Augusta');
+    await user.click(within(dialog).getByRole('button', { name: 'Save changes' }));
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Hello Augusta' })).toBeVisible();
+    expect(meCalls).toBe(callsAfterLoad + 1);
   });
 });

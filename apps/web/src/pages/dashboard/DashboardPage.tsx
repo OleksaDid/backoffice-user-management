@@ -72,6 +72,17 @@ export function DashboardPage() {
         </Stack>
       ) : null}
 
+      {users.isError && users.data ? (
+        <Alert color="orange" variant="light" role="alert" title="The list may be out of date">
+          <Group gap="sm">
+            {messageFor(users.error)}
+            <Button size="xs" variant="default" onClick={() => void users.refetch()}>
+              Retry
+            </Button>
+          </Group>
+        </Alert>
+      ) : null}
+
       {users.data?.totalItems === 0 ? <Text>No users yet.</Text> : null}
 
       {users.data && users.data.items.length > 0 ? (
