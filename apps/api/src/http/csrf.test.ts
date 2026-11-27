@@ -29,7 +29,7 @@ describe('CSRF guard', () => {
     expect(response.statusCode).toBe(200);
   });
 
-  it('AUTH-21 rejects state-changing requests from another origin', async () => {
+  it('AUTH-21 NFR-11 rejects state-changing requests from another origin', async () => {
     const response = await (
       await start()
     ).inject({

@@ -81,7 +81,7 @@ describe('sessions API (integration)', () => {
     expect((await userById(inactive.id)).loginsCount).toBe(0);
   });
 
-  it('SES-03 increments loginsCount atomically and never decreases it', async () => {
+  it('SES-03 DATA-11 increments loginsCount atomically and never decreases it', async () => {
     const user = await createUser();
     ctx.clock.advance(5_000);
 

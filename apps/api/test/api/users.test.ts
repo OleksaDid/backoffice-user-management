@@ -68,7 +68,7 @@ describe('users API (integration)', () => {
     expect(await createUser({ status: 'inactive' })).toMatchObject({ status: 'inactive' });
   });
 
-  it('USR-02 rejects unknown and read-only fields', async () => {
+  it('USR-02 NFR-13 rejects unknown and read-only fields', async () => {
     const response = await ctx.inject({
       method: 'POST',
       url: '/api/users',
@@ -90,12 +90,22 @@ describe('users API (integration)', () => {
     expect(paths).toEqual(['createdAt', 'lastName', 'loginsCount']);
   });
 
-  it('AUTH-12 stores a password hash and never returns the password', async () => {
+  it('AUTH-12 NFR-41 stores a password hash and returns exactly the user contract', async () => {
     const user = await createUser({ email: 'Grace@Example.com' });
 
     expect(user.email).toBe('grace@example.com');
     expect(JSON.stringify(user)).not.toContain('correct horse');
     expect(user).not.toHaveProperty('password');
+    expect(Object.keys(user).sort()).toEqual([
+      'createdAt',
+      'email',
+      'firstName',
+      'id',
+      'lastName',
+      'loginsCount',
+      'status',
+      'updatedAt',
+    ]);
     const stored = await ctx.database.pool.query<{ password_hash: string }>(
       'select password_hash from user_credentials where user_id = $1',
       [user.id],
@@ -160,7 +170,7 @@ describe('users API (integration)', () => {
     }
   });
 
-  it('USR-05 orders users newest first with a stable tie-breaker', async () => {
+  it('USR-05 NFR-40 orders users newest first with a stable tie-breaker', async () => {
     const oldest = await createUser({ firstName: 'Oldest' });
     ctx.clock.advance(1000);
     const sameTimeA = await createUser({ firstName: 'Same A' });
@@ -272,7 +282,7 @@ describe('users API (integration)', () => {
     expect(rows.rows.every((row) => row.terminated_at !== null)).toBe(true);
   });
 
-  it('USR-12 every update refreshes updatedAt and keeps createdAt', async () => {
+  it('USR-12 DATA-10 every update refreshes updatedAt and keeps createdAt', async () => {
     const user = await createUser();
 
     ctx.clock.advance(60_000);
@@ -298,7 +308,7 @@ describe('users API (integration)', () => {
     });
   });
 
-  it('USR-13 deletes the user and their sessions', async () => {
+  it('USR-13 DATA-12 deletes the user and their sessions', async () => {
     const user = await createUser();
     await signIn(user);
 
