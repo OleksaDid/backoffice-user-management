@@ -1,5 +1,36 @@
 # Changelog
 
+## [0.4.0](https://github.com/OleksaDid/backoffice-user-management/compare/v0.3.0...v0.4.0) (2026-11-27)
+
+
+### Features
+
+* **contracts:** add the create-user form schema ([87bcffc](https://github.com/OleksaDid/backoffice-user-management/commit/87bcffc6254afc1f24258598d260cfb7e71d8aa9))
+* **web:** add the user management dashboard (Part 2) ([92056e7](https://github.com/OleksaDid/backoffice-user-management/commit/92056e742f9dac9c425a0620894e1c1a4eab7315))
+* **web:** add the user management dashboard (Part 2) ([#22](https://github.com/OleksaDid/backoffice-user-management/issues/22)) ([508f925](https://github.com/OleksaDid/backoffice-user-management/commit/508f925b6fa97fbb83545bc654e2dea27975c9fc))
+* **web:** add the users API client, queries and notifications ([4f1b0fe](https://github.com/OleksaDid/backoffice-user-management/commit/4f1b0fe9d3e57edd7826c604469f7d716c7a948c))
+* **web:** show the pointer cursor on interactive controls ([23da09f](https://github.com/OleksaDid/backoffice-user-management/commit/23da09f80bac77a3fdb09a7aca919bffb99f8159))
+
+
+### Bug Fixes
+
+* **web:** address the dashboard review findings ([4148ec7](https://github.com/OleksaDid/backoffice-user-management/commit/4148ec7ac2078f03516626213ac71863f29ba33b))
+* **web:** give the dialog close button an accessible name ([551ffeb](https://github.com/OleksaDid/backoffice-user-management/commit/551ffeb2b6662a42b9a193b6bec3c47dbf1bbaf2))
+* **web:** warn when a background refresh of the users list fails ([2a1b2e1](https://github.com/OleksaDid/backoffice-user-management/commit/2a1b2e1089ca0bd54c6c0c76fd4838e2fa2b1b97))
+
+
+### Documentation
+
+* note the dashboard in the README ([aeb8d52](https://github.com/OleksaDid/backoffice-user-management/commit/aeb8d5224987c998132a24dc63c1c036196b4251))
+
+
+### Tests
+
+* cover review fixes and restore the stale-list warning ([#24](https://github.com/OleksaDid/backoffice-user-management/issues/24)) ([2fb0e0d](https://github.com/OleksaDid/backoffice-user-management/commit/2fb0e0dbebf685a8969a736cf4a4fb5714344294))
+* cover the review fixes that had no tests ([773c698](https://github.com/OleksaDid/backoffice-user-management/commit/773c6983e57915a5d4b192dae35ffa935f0f7735))
+* **e2e:** add dashboard journeys with accessibility checks ([cd62849](https://github.com/OleksaDid/backoffice-user-management/commit/cd628499ecb736bf945ba98fcb5dd4e912efdd8f))
+* **web:** cover the dashboard against an in-memory users API ([cc61bd3](https://github.com/OleksaDid/backoffice-user-management/commit/cc61bd3602092edc9201572252f6a23c9eb73b98))
+
 ## [0.3.0](https://github.com/OleksaDid/backoffice-user-management/compare/v0.2.0...v0.3.0) (2026-11-27)
 
 
