@@ -1,5 +1,5 @@
 import type { AuthResponse } from '@backoffice/contracts';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { useIntegrationApp } from '../support/integration.js';
 
@@ -94,6 +94,28 @@ describe('authentication API (integration)', () => {
     const response = await signIn();
     expect(response.statusCode).toBe(403);
     expect(response.json()).toMatchObject({ code: 'USER_INACTIVE' });
+  });
+
+  it('AUTH-04 a user deleted during sign-in gets 401, never 404', async () => {
+    const { user } = (await signUp()).json<AuthResponse>();
+    // Simulate the race: the row disappears after the password check.
+    const original = ctx.database.db.transaction.bind(ctx.database.db);
+    const spy = vi.spyOn(ctx.database.db, 'transaction').mockImplementationOnce(async (work) => {
+      await ctx.database.pool.query('delete from users where id = $1', [user.id]);
+      return original(work);
+    });
+
+    const response = await signIn();
+
+    spy.mockRestore();
+    expect(response.statusCode).toBe(401);
+    expect(response.json()).toMatchObject({ code: 'INVALID_CREDENTIALS' });
+  });
+
+  it('AUTH-08 a session of a user who is no longer active does not authenticate', async () => {
+    const sid = sessionCookie(await signUp());
+    await ctx.database.pool.query("update users set status = 'inactive'");
+    expect((await me(sid)).statusCode).toBe(401);
   });
 
   it('AUTH-06 sign-out ends the session and clears the cookie, even without a session', async () => {

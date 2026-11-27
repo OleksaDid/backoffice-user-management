@@ -1,6 +1,6 @@
 import type { SignInBody, SignUpBody } from '@backoffice/contracts';
 
-import { isSessionActive, type SessionEntity } from '../domain/session.js';
+import type { SessionEntity } from '../domain/session.js';
 import type { UserEntity } from '../domain/user.js';
 import { AppError } from '../errors/app-error.js';
 import type { UnitOfWork } from '../repositories/unit-of-work.js';
@@ -57,10 +57,18 @@ export class AuthService {
     if (!user || !valid) {
       throw new AppError('INVALID_CREDENTIALS');
     }
-    return this.uow.transaction(async (repositories) => {
-      const session = await startSession(repositories, user.id, this.clock(), this.ttlHours);
-      return { user: await this.reload(repositories.users, user.id), session };
-    });
+    try {
+      return await this.uow.transaction(async (repositories) => {
+        const session = await startSession(repositories, user.id, this.clock(), this.ttlHours);
+        return { user: await this.reload(repositories.users, user.id), session };
+      });
+    } catch (error) {
+      // Deleted between the password check and the session: sign-in never answers 404.
+      if (error instanceof AppError && error.code === 'USER_NOT_FOUND') {
+        throw new AppError('INVALID_CREDENTIALS', { cause: error });
+      }
+      throw error;
+    }
   }
 
   /** AUTH-06: ends the given session if it is still active; no error otherwise. */
@@ -75,17 +83,9 @@ export class AuthService {
     if (!sessionId || !UUID.test(sessionId)) {
       return null;
     }
-    const { sessions, users } = this.uow.repositories;
-    const session = await sessions.findById(sessionId);
-    if (!session || !isSessionActive(session, this.clock())) {
-      return null;
-    }
-    const user = await users.findById(session.userId);
-    // Deactivation ends sessions (USR-11); checking the status too keeps this safe anyway.
-    if (user?.status !== 'active') {
-      return null;
-    }
-    return { user, session };
+    // Deactivation ends sessions (USR-11); requiring an active user keeps this safe anyway.
+    const found = await this.uow.repositories.sessions.findActiveWithUser(sessionId, this.clock());
+    return found ?? null;
   }
 
   private async reload(
