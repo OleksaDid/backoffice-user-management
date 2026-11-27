@@ -6,7 +6,8 @@ import { Anchor, type CSSVariablesResolver, createTheme, Modal } from '@mantine/
  */
 export const theme = createTheme({
   primaryColor: 'brand',
-  primaryShade: { light: 7, dark: 4 },
+  // Filled buttons keep white text at AA contrast in both schemes (found by axe).
+  primaryShade: { light: 7, dark: 6 },
   colors: {
     brand: [
       '#e8f1fb',
@@ -43,5 +44,9 @@ export const theme = createTheme({
 export const cssVariablesResolver: CSSVariablesResolver = (current) => ({
   variables: {},
   light: { '--mantine-color-dimmed': current.colors.gray[7] },
-  dark: { '--mantine-color-dimmed': current.colors.gray[4] },
+  dark: {
+    '--mantine-color-dimmed': current.colors.gray[4],
+    // Links on the dark background need a light brand tint for 4.5:1.
+    '--mantine-color-anchor': current.colors.brand?.[2] ?? current.colors.blue[3],
+  },
 });
