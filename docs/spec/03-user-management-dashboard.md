@@ -13,7 +13,7 @@ replaces the welcome page from Part 1.
 ## Listing and pagination
 
 - **DASH-10** Users are shown in a table with a caption and these columns: name, email, status,
-  logins, created, last updated, actions. The current user's row is marked "(you)".
+  logins, created, last updated, actions. The current user's row is marked with a "You" badge.
 - **DASH-11** The table shows **6 users per page**, requested from the API with `pageSize=6`
   (server-side pagination, USR-03).
 - **DASH-12** The page number is part of the URL (`/?page=2`), so reload, back/forward and sharing

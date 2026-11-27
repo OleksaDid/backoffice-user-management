@@ -50,7 +50,7 @@ export function UsersTable({ users, currentUserId, busy, onEdit, onDelete }: Use
                   <Group gap="xs" wrap="nowrap">
                     {name}
                     {isSelf ? (
-                      <Badge variant="light" size="sm">
+                      <Badge variant="light" size="sm" style={{ flexShrink: 0 }}>
                         You
                       </Badge>
                     ) : null}
@@ -84,11 +84,13 @@ export function UsersTable({ users, currentUserId, busy, onEdit, onDelete }: Use
                       variant="light"
                       color="red"
                       aria-label={`Delete ${name}`}
-                      disabled={isSelf}
+                      // Not `disabled`: a disabled button cannot be focused, so keyboard and
+                      // screen reader users would never reach its explanation.
+                      {...(isSelf ? { 'data-disabled': true, 'aria-disabled': true } : {})}
                       title={isSelf ? SELF_DELETE_HINT : undefined}
                       aria-describedby={isSelf ? 'self-delete-hint' : undefined}
                       onClick={() => {
-                        onDelete(user);
+                        if (!isSelf) onDelete(user);
                       }}
                     >
                       Delete
