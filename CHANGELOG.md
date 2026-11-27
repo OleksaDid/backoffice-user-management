@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.5.0](https://github.com/OleksaDid/backoffice-user-management/compare/v0.4.0...v0.5.0) (2026-11-27)
+
+
+### Features
+
+* **web:** add light, dark and system themes (Part 3) ([#25](https://github.com/OleksaDid/backoffice-user-management/issues/25)) ([fec5cf4](https://github.com/OleksaDid/backoffice-user-management/commit/fec5cf47b676cb86fde699092f77ab4e67f38060))
+
+
+### Bug Fixes
+
+* **web:** render page errors inside the layout ([76633e9](https://github.com/OleksaDid/backoffice-user-management/commit/76633e9266d933111d6fe577c98dc8efb668bb2c))
+
+
+### Tests
+
+* make the theme tests prove what they claim ([36a9acb](https://github.com/OleksaDid/backoffice-user-management/commit/36a9acb61ac870568f2285dd1a81a947c2fe9ab5))
+
+
+### Refactoring
+
+* **web:** share the brand palette between the theme and CSS variables ([9c4a7c6](https://github.com/OleksaDid/backoffice-user-management/commit/9c4a7c6a9eb05c5d12df841bbbe0407a02ab329b))
+
 ## [0.4.0](https://github.com/OleksaDid/backoffice-user-management/compare/v0.3.0...v0.4.0) (2026-11-27)
 
 
