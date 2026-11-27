@@ -1,7 +1,8 @@
 import { and, eq, gt, isNull } from 'drizzle-orm';
 
-import { sessions } from '../db/schema.js';
+import { sessions, users } from '../db/schema.js';
 import type { SessionEntity } from '../domain/session.js';
+import type { UserEntity } from '../domain/user.js';
 import type { Executor } from './executor.js';
 
 export class SessionRepository {
@@ -20,6 +21,29 @@ export class SessionRepository {
 
   async findById(id: string): Promise<SessionEntity | undefined> {
     const [row] = await this.db.select().from(sessions).where(eq(sessions.id, id));
+    return row;
+  }
+
+  /**
+   * AUTH-08: the active session with its active user, in one indexed query; this runs on
+   * every authenticated request.
+   */
+  async findActiveWithUser(
+    id: string,
+    now: Date,
+  ): Promise<{ session: SessionEntity; user: UserEntity } | undefined> {
+    const [row] = await this.db
+      .select({ session: sessions, user: users })
+      .from(sessions)
+      .innerJoin(users, eq(users.id, sessions.userId))
+      .where(
+        and(
+          eq(sessions.id, id),
+          isNull(sessions.terminatedAt),
+          gt(sessions.expiresAt, now),
+          eq(users.status, 'active'),
+        ),
+      );
     return row;
   }
 
