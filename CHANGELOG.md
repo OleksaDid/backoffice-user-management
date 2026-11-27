@@ -1,5 +1,45 @@
 # Changelog
 
+## [1.0.0](https://github.com/OleksaDid/backoffice-user-management/compare/v0.5.0...v1.0.0) (2026-11-27)
+
+
+### Bug Fixes
+
+* address the Part 4 review findings ([0c87bbc](https://github.com/OleksaDid/backoffice-user-management/commit/0c87bbc499618f0f7241e2ed055e1d7d020842ce))
+* **api:** give container-starting integration tests enough time ([42648ec](https://github.com/OleksaDid/backoffice-user-management/commit/42648ecf9ea62f8f1311db8349b6af4f1db1809d))
+* **docker:** send Cache-Control and HSTS once on API responses ([1b96dd1](https://github.com/OleksaDid/backoffice-user-management/commit/1b96dd1657f5aa1502f4313e38a88913d0112515))
+* e2e findings from staging (loading-state ARIA, log out race, dialog animation) ([#30](https://github.com/OleksaDid/backoffice-user-management/issues/30)) ([e629ede](https://github.com/OleksaDid/backoffice-user-management/commit/e629ede130acc0f43de0759d044ca3fc32c55d32))
+* **web:** label loading states with text instead of aria-label ([caca68a](https://github.com/OleksaDid/backoffice-user-management/commit/caca68aa39a63763f1f094b55c4a324109640481))
+
+
+### Documentation
+
+* final README, e2e on staging and release 1.0.0 ([#28](https://github.com/OleksaDid/backoffice-user-management/issues/28)) ([a64978c](https://github.com/OleksaDid/backoffice-user-management/commit/a64978cfd6d1834b4bb146f4eae9afe14b3ea5d7))
+* generate a traceability matrix from test titles ([e05be51](https://github.com/OleksaDid/backoffice-user-management/commit/e05be512824e264c31797d6ed42faad5127946c1))
+* record the testing strategy decision ([c1d861f](https://github.com/OleksaDid/backoffice-user-management/commit/c1d861fbad901dd2f5ecc27cd1d36363e88b7694))
+* update agent guidance and the deployment guide for the final pipeline ([26d1edb](https://github.com/OleksaDid/backoffice-user-management/commit/26d1edba838e2eafb34e475293466a15eeca5fe8))
+* write the final README ([813d5f2](https://github.com/OleksaDid/backoffice-user-management/commit/813d5f26f28bde09be6f0705f391c1be9f1b2fe0))
+
+
+### Build and Deployment
+
+* enforce coverage thresholds, traceability and non-root containers ([85d6300](https://github.com/OleksaDid/backoffice-user-management/commit/85d630086be03c2125e1dba0b17c476a023054ee))
+* run the full end-to-end suite on staging before releasing ([cada7d6](https://github.com/OleksaDid/backoffice-user-management/commit/cada7d6ce4452d783b8b821ff20c79d480a65f03))
+
+
+### Tests
+
+* close requirement gaps and reference requirements in test titles ([907cbc6](https://github.com/OleksaDid/backoffice-user-management/commit/907cbc68b827ff1800f1406d6277e61bab3e51e0))
+* **e2e:** run in Chromium, Firefox and WebKit and check production headers ([440669a](https://github.com/OleksaDid/backoffice-user-management/commit/440669a809f1ac2585a9a01f5eba8c5e0e347296))
+* **e2e:** run with reduced motion so axe never sees a fading dialog ([a4db934](https://github.com/OleksaDid/backoffice-user-management/commit/a4db934116613971f1ddfe123bd029c679ec5ce1))
+* **e2e:** wait for sign-out to finish before the next step ([9f95080](https://github.com/OleksaDid/backoffice-user-management/commit/9f9508086e662ad542531ab8d01915ad2cc88487))
+* enforce coverage, trace every requirement and run e2e in three browsers (Part 4) ([#27](https://github.com/OleksaDid/backoffice-user-management/issues/27)) ([070b65a](https://github.com/OleksaDid/backoffice-user-management/commit/070b65a6a7728d32863aa650c897c2b38d8e18d6))
+
+
+### Miscellaneous
+
+* **release:** mark the complete challenge as 1.0.0 ([4bddd14](https://github.com/OleksaDid/backoffice-user-management/commit/4bddd14d8dc32008e9306b4b0e094e32d78f2c44))
+
 ## [0.5.0](https://github.com/OleksaDid/backoffice-user-management/compare/v0.4.0...v0.5.0) (2026-11-27)
 
 
