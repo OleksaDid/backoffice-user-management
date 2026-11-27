@@ -1,0 +1,33 @@
+{
+  "name": "@backoffice/api",
+  "version": "0.0.0",
+  "private": true,
+  "description": "REST API for users, sessions and authentication.",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=.env src/main.ts",
+    "build": "node build.mjs",
+    "start": "node dist/main.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "5.1.2",
+    "esbuild": "0.28.2",
+    "pino-pretty": "13.2.0",
+    "tsx": "4.23.15",
+    "vitest": "5.1.2"
+  },
+  "dependencies": {
+    "@backoffice/contracts": "0.0.0",
+    "@fastify/helmet": "13.2.0",
+    "@fastify/swagger": "9.9.5",
+    "@fastify/swagger-ui": "6.1.5",
+    "close-with-grace": "2.5.0",
+    "fastify": "5.12.8",
+    "fastify-type-provider-zod": "7.0.0",
+    "pino": "10.4.0",
+    "zod": "4.6.7"
+  }
+}
