@@ -58,6 +58,7 @@ jobs:
       - run: npm run typecheck
 
   test:
+    # Unit and integration tests; integration tests start PostgreSQL with Testcontainers.
     name: Unit tests (Node ${{ matrix.node }})
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -73,3 +74,12 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+
+  docker:
+    name: Docker images
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build API image
+        run: docker build --file apps/api/Dockerfile --tag backoffice-api:ci .
