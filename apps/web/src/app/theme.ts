@@ -25,6 +25,8 @@ export const theme = createTheme({
     'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
   defaultRadius: 'md',
   focusRing: 'auto',
+  // Buttons, switches and pagination controls show the pointer cursor.
+  cursorType: 'pointer',
   respectReducedMotion: true,
   components: {
     // WCAG 1.4.1: links inside text must not rely on colour alone (axe link-in-text-block).
