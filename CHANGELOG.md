@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.1](https://github.com/OleksaDid/backoffice-user-management/compare/v1.0.0...v1.0.1) (2026-11-27)
+
+
+### Tests
+
+* **e2e:** match pagination buttons by exact name ([c136cca](https://github.com/OleksaDid/backoffice-user-management/commit/c136ccacb35b431b207cdbb92c2abcb1e3950f0d))
+* **e2e:** match pagination buttons by exact name ([#31](https://github.com/OleksaDid/backoffice-user-management/issues/31)) ([3068d5c](https://github.com/OleksaDid/backoffice-user-management/commit/3068d5c82e3aa1dbff3da6c3edfc8cc917b5dbd1))
+
 ## [1.0.0](https://github.com/OleksaDid/backoffice-user-management/compare/v0.5.0...v1.0.0) (2026-11-27)
 
 
