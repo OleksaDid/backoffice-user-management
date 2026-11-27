@@ -5,6 +5,11 @@ single-page app sharing typed contracts, backed by PostgreSQL.
 
 > Work in progress: the API foundation is in place; features arrive part by part.
 
+## Live environments
+
+- Production: https://test.oleksa.live (deployed from releases)
+- Staging: https://test-staging.oleksa.live (deployed from `main`)
+
 ## Quick start
 
 Requirements: Docker with Compose v2.
@@ -35,6 +40,7 @@ npm test                                       # unit + integration (Testcontain
 - [Behaviour specification](docs/spec/README.md)
 - [Acceptance criteria mapped to the spec](docs/acceptance-criteria.md)
 - [Contributing and delivery workflow](CONTRIBUTING.md)
+- [Deployment: environments, images, configuration](deploy/README.md)
 - [Decision log](docs/decisions/README.md)
 - [Guidance for AI coding agents](AGENTS.md)
 
