@@ -22,7 +22,9 @@ test.describe('production web server @full @smoke', () => {
     const assetResponse = await request.get(asset ?? '');
     expect(assetResponse.headers()['cache-control']).toContain('immutable');
 
+    // Exactly one value: the API and nginx must not both add the header.
     const api = await request.get('/api/health/live');
     expect(api.headers()['cache-control']).toBe('no-store');
+    expect(api.headers()['strict-transport-security'] ?? '').not.toContain(',');
   });
 });
