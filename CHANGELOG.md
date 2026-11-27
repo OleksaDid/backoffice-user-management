@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.2.0](https://github.com/OleksaDid/backoffice-user-management/compare/v0.1.0...v0.2.0) (2026-11-27)
+
+
+### Features
+
+* **api:** add domain rules for user updates and sessions ([20adbde](https://github.com/OleksaDid/backoffice-user-management/commit/20adbde3f005779feb58e4789818a3549c9b1e92))
+* **api:** add user and session repositories with a unit of work ([ebb7267](https://github.com/OleksaDid/backoffice-user-management/commit/ebb7267fc9b78789d08e18591b37664188ff8443))
+* **api:** add user and session services ([b8228a7](https://github.com/OleksaDid/backoffice-user-management/commit/b8228a72968d7d48b515822db454fabb1de9dd02))
+* **api:** add users and sessions API (Part 0) ([#13](https://github.com/OleksaDid/backoffice-user-management/issues/13)) ([4a5b406](https://github.com/OleksaDid/backoffice-user-management/commit/4a5b406f3eabf54bc5cbc046b58d43ec7003d5ab))
+* **api:** expose the users and sessions endpoints ([38194a8](https://github.com/OleksaDid/backoffice-user-management/commit/38194a8d30ab2fa67d815e98bb8a22f42437b063))
+* **api:** require both names when updating a user's profile ([68de1bb](https://github.com/OleksaDid/backoffice-user-management/commit/68de1bb3c938b1ab2e6727c99a37193e7871b290))
+* **contracts:** add user, session and pagination schemas ([d594b74](https://github.com/OleksaDid/backoffice-user-management/commit/d594b74e06196c861f186465b4a95c77c2a80b83))
+* **db:** add the demo data reset command ([78349c4](https://github.com/OleksaDid/backoffice-user-management/commit/78349c42f1206d29f9b0a22fc46a20cc6c818f13))
+
+
+### Documentation
+
+* document the users and sessions API and shift release numbers ([5422440](https://github.com/OleksaDid/backoffice-user-management/commit/54224405247fb8a0925246df1bd1fb76117fd078))
+
+
+### Tests
+
+* **api:** cover the sessions API against PostgreSQL ([26628ac](https://github.com/OleksaDid/backoffice-user-management/commit/26628ac6cd0e961673ac4b518588756dca1d5c13))
+* **api:** cover the users API against PostgreSQL ([79e47bd](https://github.com/OleksaDid/backoffice-user-management/commit/79e47bd912a27d83e46b9a7bdaacb6a45829f346))
+* **api:** scaffold users and sessions API tests from the spec ([57f8567](https://github.com/OleksaDid/backoffice-user-management/commit/57f8567dac77e07b3526c81c47f95a69519eeee0))
+
 ## 0.1.0 (2026-11-27)
 
 
