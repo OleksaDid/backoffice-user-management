@@ -1,0 +1,86 @@
+name: Deploy
+
+# Reusable deployment to one environment. The server accepts only
+# `deploy <env> <tag>` and `rollback <env>` over SSH, reached through Tailscale.
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: staging or production
+        required: true
+        type: string
+      tag:
+        description: Image tag to deploy (sha-<commit> or vX.Y.Z)
+        required: true
+        type: string
+      url:
+        description: Public URL used for the smoke test
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy ${{ inputs.tag }} to ${{ inputs.environment }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ inputs.url }}
+    concurrency:
+      group: deploy-${{ inputs.environment }}
+      cancel-in-progress: false
+    env:
+      DEPLOY_ENV: ${{ inputs.environment }}
+      DEPLOY_TAG: ${{ inputs.tag }}
+      DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+    steps:
+      - name: Join the tailnet as an ephemeral CI node
+        uses: tailscale/github-action@064b10558093f38325e838ddea35486bdc6b1d5c # v4.4.0
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+
+      - name: Configure SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          umask 077
+          mkdir -p ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Deploy
+        run: |
+          ssh -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -i ~/.ssh/deploy_key \
+            "$DEPLOY_USER@$DEPLOY_HOST" deploy "$DEPLOY_ENV" "$DEPLOY_TAG"
+
+      - name: Smoke test
+        id: smoke
+        env:
+          PUBLIC_URL: ${{ inputs.url }}
+        run: |
+          for _ in $(seq 1 12); do
+            if curl --fail --silent --show-error "$PUBLIC_URL/api/health/ready" \
+              && curl --fail --silent --output /dev/null "$PUBLIC_URL/"; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::Smoke test failed for $PUBLIC_URL"
+          exit 1
+
+      - name: Roll back after a failed smoke test
+        if: failure() && steps.smoke.outcome == 'failure'
+        run: |
+          ssh -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -i ~/.ssh/deploy_key \
+            "$DEPLOY_USER@$DEPLOY_HOST" rollback "$DEPLOY_ENV"
+
+      - name: Remove the SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
