@@ -38,6 +38,7 @@ npm run check:branch             # validate the current branch name
 docker compose up --build        # full stack, production-like
 docker compose -f compose.yaml -f compose.dev.yaml up -d db   # database only, for dev
 npm run dev -w @backoffice/api           # API with reload (copy apps/api/.env.example to .env)
+npm run dev -w @backoffice/web           # web dev server on :5173, proxies /api to :3000
 npm run dev:migrate -w @backoffice/api   # apply migrations in dev
 npm run db:generate -w @backoffice/api -- --name <change>   # new migration from schema.ts
 ```

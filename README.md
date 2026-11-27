@@ -11,8 +11,9 @@ Requirements: Docker with Compose v2.
 
 ```bash
 docker compose up --build
-curl http://localhost:3000/api/health/ready   # {"status":"ok",...}
-open http://localhost:3000/api/docs           # OpenAPI UI
+open http://localhost:8080                     # web app
+curl http://localhost:8080/api/health/ready   # {"status":"ok",...}
+open http://localhost:8080/api/docs           # OpenAPI UI
 ```
 
 ## Development
@@ -24,7 +25,8 @@ npm install
 docker compose -f compose.yaml -f compose.dev.yaml up -d db
 cp apps/api/.env.example apps/api/.env
 npm run dev:migrate -w @backoffice/api
-npm run dev -w @backoffice/api
+npm run dev -w @backoffice/api                 # API on :3000
+npm run dev -w @backoffice/web                 # web on :5173, proxies /api
 npm test                                       # unit + integration (Testcontainers)
 ```
 

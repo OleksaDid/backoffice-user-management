@@ -81,5 +81,14 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Build API image
-        run: docker build --file apps/api/Dockerfile --tag backoffice-api:ci .
+      - name: Build images
+        run: docker compose build
+      - name: Start the stack
+        run: docker compose up --detach --wait --wait-timeout 120
+      - name: Smoke test through the web server
+        run: |
+          curl --fail --silent --show-error http://localhost:8080/api/health/ready
+          curl --fail --silent --show-error --output /dev/null http://localhost:8080/
+      - name: Show logs on failure
+        if: failure()
+        run: docker compose logs

@@ -1,4 +1,4 @@
-# Local, production-like stack: `docker compose up --build`.
+# Local, production-like stack: `docker compose up --build`, then open http://localhost:8080.
 # Credentials below are for local use only; servers use their own secret env files.
 name: backoffice
 
@@ -27,6 +27,8 @@ services:
     environment: &api-env
       DATABASE_URL: postgres://backoffice:backoffice@db:5432/backoffice
       LOG_LEVEL: info
+      # The web server is the only proxy in front of the API.
+      TRUST_PROXY_HOPS: '1'
     depends_on:
       db:
         condition: service_healthy
@@ -42,8 +44,21 @@ services:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+    read_only: true
+    tmpfs: [/tmp]
+    restart: unless-stopped
+
+  # Public entry point: the SPA and /api on one origin.
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    image: backoffice-web:local
+    depends_on:
+      api:
+        condition: service_healthy
     ports:
-      - '127.0.0.1:3000:3000'
+      - '127.0.0.1:8080:8080'
     read_only: true
     tmpfs: [/tmp]
     restart: unless-stopped
