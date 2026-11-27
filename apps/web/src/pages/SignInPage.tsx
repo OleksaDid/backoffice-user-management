@@ -1,6 +1,6 @@
 import { type SignInBody, signInBodySchema } from '@backoffice/contracts';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Anchor, Button, PasswordInput, Stack, Text, TextInput } from '@mantine/core';
+import { Alert, Anchor, Button, Stack, Text, TextInput } from '@mantine/core';
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { type SubmitHandler, useForm } from 'react-hook-form';
@@ -11,6 +11,7 @@ import { authApi } from '../api/auth';
 import { messageFor } from '../api/error-messages';
 import { useStoreSession } from '../auth/session';
 import { FormAlert } from '../components/FormAlert';
+import { PasswordField } from '../components/PasswordField';
 import { PageHeading } from '../components/PageHeading';
 import { AuthCard } from './AuthCard';
 
@@ -69,13 +70,11 @@ export function SignInPage() {
             error={errors.email?.message}
             {...register('email')}
           />
-          <PasswordInput
+          <PasswordField
             label="Password"
             autoComplete="current-password"
             withAsterisk
             error={errors.password?.message}
-            // Mantine marks only the wrapper as invalid; screen readers need it on the input.
-            aria-invalid={errors.password ? true : undefined}
             {...register('password')}
           />
           <Button type="submit" loading={signIn.isPending} mt="xs">
