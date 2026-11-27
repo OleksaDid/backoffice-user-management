@@ -1,0 +1,55 @@
+name: Release
+
+# A published release (created by release-please after staging passed) promotes the
+# exact images of the tagged commit to vX.Y.Z and deploys them to production. The
+# production environment requires the maintainer's approval and accepts only v* tags.
+on:
+  release:
+    types: [published]
+  # Fallback: run manually on a release tag.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  IMAGE_PREFIX: ghcr.io/oleksadid/backoffice-user-management
+
+jobs:
+  promote:
+    name: Promote images
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      tag: ${{ github.ref_name }}
+    env:
+      SOURCE_TAG: sha-${{ github.sha }}
+      RELEASE_TAG: ${{ github.ref_name }}
+    steps:
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # Retag the digests that passed staging; production never runs a rebuilt image.
+      - name: Retag
+        run: |
+          for app in api web; do
+            docker buildx imagetools create \
+              --tag "$IMAGE_PREFIX-$app:$RELEASE_TAG" "$IMAGE_PREFIX-$app:$SOURCE_TAG"
+          done
+
+  deploy-production:
+    name: Production
+    needs: promote
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: production
+      tag: ${{ needs.promote.outputs.tag }}
+      url: https://test.oleksa.live
+    secrets: inherit
