@@ -15,10 +15,23 @@ export default defineConfig({
     baseURL: process.env.E2E_BASE_URL ?? 'http://localhost:8080',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
-    // Optional: reuse a locally installed browser instead of Playwright's download.
-    ...(process.env.PW_CHROMIUM_EXECUTABLE
-      ? { launchOptions: { executablePath: process.env.PW_CHROMIUM_EXECUTABLE } }
-      : {}),
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  // NFR-50: the three engines users run. Locally E2E_BROWSERS=chromium keeps runs fast.
+  projects: [
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        // Optional: reuse a locally installed Chromium instead of Playwright's download.
+        ...(process.env.PW_CHROMIUM_EXECUTABLE
+          ? { launchOptions: { executablePath: process.env.PW_CHROMIUM_EXECUTABLE } }
+          : {}),
+      },
+    },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+  ].filter(
+    (project) =>
+      !process.env.E2E_BROWSERS || process.env.E2E_BROWSERS.split(',').includes(project.name),
+  ),
 });

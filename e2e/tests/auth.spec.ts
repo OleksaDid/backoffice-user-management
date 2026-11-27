@@ -4,7 +4,7 @@ import { expectNoA11yViolations } from '../support/accessibility.js';
 import { expectGreeting, newUser, signIn, signUp } from '../support/users.js';
 
 test.describe('authentication @full', () => {
-  test('UI-AUTH-02 visitors without a session land on sign-up', async ({ page }) => {
+  test('UI-AUTH-02 NFR-25 visitors without a session land on sign-up', async ({ page }) => {
     await page.goto('/');
     await expect(page).toHaveURL(/\/sign-up$/);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Create your account');

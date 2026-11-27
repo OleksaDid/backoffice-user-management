@@ -58,7 +58,7 @@ test.describe('themes @full', () => {
     expect(await scheme(page)).toBe('dark');
   });
 
-  test('THEME-05 both themes pass the accessibility checks', async ({ page }) => {
+  test('THEME-05 NFR-25 both themes pass the accessibility checks', async ({ page }) => {
     for (const choice of ['Light', 'Dark']) {
       await page.goto('/sign-up');
       await page.getByText(choice, { exact: true }).click();
