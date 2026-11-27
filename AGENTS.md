@@ -28,12 +28,18 @@ Directories appear as the corresponding pull requests land; check that a path ex
 Requires Node.js 22.12+ (`.nvmrc` pins 24) and Docker for integration and e2e tests.
 
 ```bash
-npm install            # install all workspaces and git hooks
-npm run format         # Prettier write
-npm run lint           # ESLint (type-aware)
-npm run typecheck      # tsc in every workspace
-npm test               # unit and integration tests in every workspace
-npm run check:branch   # validate the current branch name
+npm install                      # install all workspaces and git hooks
+npm run format                   # Prettier write
+npm run lint                     # ESLint (type-aware)
+npm run typecheck                # tsc in every workspace
+npm test                         # unit + integration tests (integration needs Docker)
+npm run check:branch             # validate the current branch name
+
+docker compose up --build        # full stack, production-like
+docker compose -f compose.yaml -f compose.dev.yaml up -d db   # database only, for dev
+npm run dev -w @backoffice/api           # API with reload (copy apps/api/.env.example to .env)
+npm run dev:migrate -w @backoffice/api   # apply migrations in dev
+npm run db:generate -w @backoffice/api -- --name <change>   # new migration from schema.ts
 ```
 
 ## How we build features (spec-driven)
@@ -55,7 +61,8 @@ change in the same PR and call it out in the PR description.
 - Errors: throw `AppError` subclasses with a code from the error catalog. Never return ad-hoc
   error shapes; the central error handler produces RFC 9457 problem details.
 - Logging goes through the injected logger or `ErrorReporter`, never `console.*`.
-- Database changes only through new migrations. Never edit a migration that has been merged.
+- Database changes only through new migrations generated from `apps/api/src/db/schema.ts`. Never
+  edit a migration that has been merged; follow expand/contract (spec 06, DATA-02).
 - Accessibility is a requirement: semantic HTML, labelled controls, keyboard support. The jsx-a11y
   lint rules and axe checks in e2e must pass.
 - English for all code, comments, docs and UI text.
