@@ -27,16 +27,25 @@ function toAuthResponse({ user, session }: Authenticated) {
 
 /** Authentication API (spec 02). */
 export const authRoutes =
-  (auth: AuthService, cookies: CookieSettings, clock: Clock): FastifyPluginCallbackZod =>
+  (
+    auth: AuthService,
+    cookies: CookieSettings,
+    clock: Clock,
+    attemptsPerMinute: number,
+  ): FastifyPluginCallbackZod =>
   (app, _options, done) => {
+    // AUTH-40: brute-force and sign-up spam protection per client IP.
+    const rateLimit = { max: attemptsPerMinute, timeWindow: '1 minute' };
+
     app.post(
       '/auth/sign-up',
       {
+        config: { rateLimit },
         schema: {
           tags,
           summary: 'Register, sign in and receive the session cookie',
           body: signUpBodySchema,
-          response: { 201: authResponseSchema, 400: problem, 409: problem },
+          response: { 201: authResponseSchema, 400: problem, 409: problem, 429: problem },
         },
       },
       async (request, reply) => {
@@ -49,11 +58,18 @@ export const authRoutes =
     app.post(
       '/auth/sign-in',
       {
+        config: { rateLimit },
         schema: {
           tags,
           summary: 'Sign in and receive the session cookie',
           body: signInBodySchema,
-          response: { 200: authResponseSchema, 400: problem, 401: problem, 403: problem },
+          response: {
+            200: authResponseSchema,
+            400: problem,
+            401: problem,
+            403: problem,
+            429: problem,
+          },
         },
       },
       async (request, reply) => {

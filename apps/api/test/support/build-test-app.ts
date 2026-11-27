@@ -11,6 +11,7 @@ export const TEST_ORIGIN = 'https://backoffice.test';
 export interface TestAppOptions {
   readinessProbe?: ReadinessProbe;
   services?: AppDependencies['services'];
+  authRateLimit?: number;
 }
 
 /** Stands in for a service in tests that never reach domain endpoints: any call is a test bug. */
@@ -40,6 +41,7 @@ export async function buildTestApp(options: TestAppOptions = {}) {
       TRUST_PROXY_HOPS: 0,
       COOKIE_SECURE: true,
       PUBLIC_ORIGIN: TEST_ORIGIN,
+      AUTH_RATE_LIMIT_PER_MINUTE: options.authRateLimit ?? 1000,
     },
     logger: pino({ level: 'silent' }),
     errorReporter,

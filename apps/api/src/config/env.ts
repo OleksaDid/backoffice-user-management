@@ -25,6 +25,8 @@ export const envSchema = z.object({
   PUBLIC_ORIGIN: z.url().optional(),
   /** AUTH-20: send the session cookie only over HTTPS. Disable only for plain-HTTP local runs. */
   COOKIE_SECURE: booleanString.default(true),
+  /** AUTH-40: sign-in and sign-up attempts per client IP and minute. */
+  AUTH_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(1).max(10_000).default(10),
   /** Absolute session lifetime (spec 01, Session). */
   SESSION_TTL_HOURS: z.coerce
     .number()

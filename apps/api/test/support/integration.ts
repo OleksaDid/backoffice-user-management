@@ -50,7 +50,9 @@ export interface IntegrationContext {
  * Full app against a real PostgreSQL container, shared by the tests of one file.
  * Tables are emptied before each test, so tests stay independent.
  */
-export function useIntegrationApp(options: { sessionTtlHours?: number } = {}): IntegrationContext {
+export function useIntegrationApp(
+  options: { sessionTtlHours?: number; authRateLimit?: number } = {},
+): IntegrationContext {
   const context = {
     clock: {
       now: new Date('2026-03-01T10:00:00.000Z'),
@@ -78,6 +80,7 @@ export function useIntegrationApp(options: { sessionTtlHours?: number } = {}): I
         TRUST_PROXY_HOPS: 0,
         COOKIE_SECURE: true,
         PUBLIC_ORIGIN: TEST_ORIGIN,
+        AUTH_RATE_LIMIT_PER_MINUTE: options.authRateLimit ?? 1000,
       },
       clock,
       logger,

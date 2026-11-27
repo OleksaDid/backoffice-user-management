@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import cookie from '@fastify/cookie';
 import helmet from '@fastify/helmet';
+import rateLimit from '@fastify/rate-limit';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import Fastify from 'fastify';
@@ -14,6 +15,7 @@ import {
 import type { Logger } from 'pino';
 
 import type { Config } from './config/env.js';
+import { AppError } from './errors/app-error.js';
 import { csrfGuard } from './http/csrf.js';
 import { registerErrorHandling } from './http/error-handler.js';
 import { authRoutes } from './http/routes/auth.js';
@@ -30,7 +32,14 @@ import type { UserService } from './services/user-service.js';
 export const API_PREFIX = '/api';
 
 export interface AppDependencies {
-  config: Pick<Config, 'NODE_ENV' | 'TRUST_PROXY_HOPS' | 'COOKIE_SECURE' | 'PUBLIC_ORIGIN'>;
+  config: Pick<
+    Config,
+    | 'NODE_ENV'
+    | 'TRUST_PROXY_HOPS'
+    | 'COOKIE_SECURE'
+    | 'PUBLIC_ORIGIN'
+    | 'AUTH_RATE_LIMIT_PER_MINUTE'
+  >;
   logger: Logger;
   errorReporter: ErrorReporter;
   readinessProbe: ReadinessProbe;
@@ -84,6 +93,15 @@ export async function buildApp(deps: AppDependencies): Promise<App> {
 
   registerErrorHandling(app, deps.errorReporter);
 
+  // AUTH-40: opt-in per route (sign-in, sign-up); keyed by client IP behind the proxy.
+  await app.register(rateLimit, {
+    global: false,
+    errorResponseBuilder: (_request, context) =>
+      new AppError('RATE_LIMITED', {
+        detail: `Too many attempts. Try again in ${context.after}.`,
+      }),
+  });
+
   await app.register(swagger, {
     openapi: {
       openapi: '3.1.0',
@@ -100,7 +118,10 @@ export async function buildApp(deps: AppDependencies): Promise<App> {
   await app.register(healthRoutes(deps.readinessProbe), { prefix: API_PREFIX });
   const cookies = { secure: deps.config.COOKIE_SECURE };
   const { auth, users, sessions } = deps.services;
-  await app.register(authRoutes(auth, cookies, deps.clock ?? systemClock), { prefix: API_PREFIX });
+  await app.register(
+    authRoutes(auth, cookies, deps.clock ?? systemClock, deps.config.AUTH_RATE_LIMIT_PER_MINUTE),
+    { prefix: API_PREFIX },
+  );
   await app.register(userRoutes(users, auth), { prefix: API_PREFIX });
   await app.register(sessionRoutes(sessions, auth, cookies), { prefix: API_PREFIX });
 
