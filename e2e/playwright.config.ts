@@ -15,6 +15,9 @@ export default defineConfig({
     baseURL: process.env.E2E_BASE_URL ?? 'http://localhost:8080',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    // Mantine skips transitions with reduced motion, so axe never inspects a dialog that is
+    // still fading in (half-transparent text fails colour contrast, seen in WebKit).
+    reducedMotion: 'reduce',
   },
   projects: selectedProjects(),
 });
