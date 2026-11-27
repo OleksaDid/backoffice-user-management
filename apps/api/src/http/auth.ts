@@ -19,7 +19,7 @@ export function authOf(request: FastifyRequest): Authenticated {
   return request.auth;
 }
 
-/** AUTH-08: preHandler that rejects requests without an active session with 401. */
+/** AUTH-08: preValidation hook that rejects requests without an active session with 401. */
 export function requireAuth(auth: AuthService) {
   return async (request: FastifyRequest, _reply: FastifyReply): Promise<void> => {
     request.auth = await auth.authenticate(request.cookies[SESSION_COOKIE]);

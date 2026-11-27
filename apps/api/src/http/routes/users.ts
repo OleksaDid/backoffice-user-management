@@ -11,16 +11,21 @@ import {
 import type { FastifyPluginCallbackZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 
+import type { AuthService } from '../../services/auth-service.js';
 import type { UserService } from '../../services/user-service.js';
+import { requireAuth } from '../auth.js';
 import { toUserDto } from '../mappers.js';
 
 const problem = problemDetailsSchema;
 const tags = ['users'];
 
-/** Users API (spec 01). */
+/** Users API (spec 01); every route requires an active session (AUTH-08). */
 export const userRoutes =
-  (users: UserService): FastifyPluginCallbackZod =>
+  (users: UserService, auth: AuthService): FastifyPluginCallbackZod =>
   (app, _options, done) => {
+    // Before validation: anonymous requests get 401, never schema details.
+    app.addHook('preValidation', requireAuth(auth));
+
     app.get(
       '/users',
       {

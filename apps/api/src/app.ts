@@ -96,16 +96,11 @@ export async function buildApp(deps: AppDependencies): Promise<App> {
   await app.register(swaggerUi, { routePrefix: `${API_PREFIX}/docs` });
 
   await app.register(healthRoutes(deps.readinessProbe), { prefix: API_PREFIX });
-  await app.register(
-    authRoutes(
-      deps.services.auth,
-      { secure: deps.config.COOKIE_SECURE },
-      deps.clock ?? systemClock,
-    ),
-    { prefix: API_PREFIX },
-  );
-  await app.register(userRoutes(deps.services.users), { prefix: API_PREFIX });
-  await app.register(sessionRoutes(deps.services.sessions), { prefix: API_PREFIX });
+  const cookies = { secure: deps.config.COOKIE_SECURE };
+  const { auth, users, sessions } = deps.services;
+  await app.register(authRoutes(auth, cookies, deps.clock ?? systemClock), { prefix: API_PREFIX });
+  await app.register(userRoutes(users, auth), { prefix: API_PREFIX });
+  await app.register(sessionRoutes(sessions, auth, cookies), { prefix: API_PREFIX });
 
   return app;
 }

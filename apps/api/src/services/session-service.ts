@@ -12,13 +12,6 @@ export class SessionService {
     private readonly ttlHours: number,
   ) {}
 
-  /** SES-01 to SES-03 */
-  create(userId: string): Promise<SessionEntity> {
-    return this.uow.transaction((repositories) =>
-      startSession(repositories, userId, this.clock(), this.ttlHours),
-    );
-  }
-
   /** SES-04 to SES-06: terminating an ended session is a no-op, an unknown one is 404. */
   async terminate(id: string): Promise<void> {
     const { sessions } = this.uow.repositories;

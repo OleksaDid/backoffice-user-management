@@ -82,7 +82,7 @@ export const authRoutes =
     app.get(
       '/auth/me',
       {
-        preHandler: requireAuth(auth),
+        preValidation: requireAuth(auth),
         schema: {
           tags,
           summary: 'The signed-in user and their session',
