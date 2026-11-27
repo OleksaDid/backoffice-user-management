@@ -1,0 +1,17 @@
+{
+  "name": "@backoffice/contracts",
+  "version": "0.0.0",
+  "private": true,
+  "description": "zod schemas, DTO types and the error catalog shared by the API and the web app.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "devDependencies": {
+    "vitest": "5.1.2"
+  }
+}
