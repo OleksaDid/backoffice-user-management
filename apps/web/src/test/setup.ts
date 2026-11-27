@@ -10,8 +10,9 @@ afterEach(() => {
 // jsdom lacks these browser APIs; Mantine uses them for color scheme and layout.
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
+  // Reduced motion: Mantine then skips transitions, so dialogs are visible immediately.
   value: (query: string) => ({
-    matches: false,
+    matches: query.includes('prefers-reduced-motion: reduce'),
     media: query,
     onchange: null,
     addListener: () => undefined,
