@@ -25,13 +25,14 @@ function unusedService(name: string): never {
 const unusedServices: AppDependencies['services'] = {
   users: unusedService('users'),
   sessions: unusedService('sessions'),
+  auth: unusedService('auth'),
 };
 
 /** Builds the app with silent logging, a spy reporter and a healthy probe by default. */
 export async function buildTestApp(options: TestAppOptions = {}) {
   const errorReporter = { report: vi.fn<ErrorReporter['report']>() };
   const app = await buildApp({
-    config: { NODE_ENV: 'test', TRUST_PROXY_HOPS: 0 },
+    config: { NODE_ENV: 'test', TRUST_PROXY_HOPS: 0, COOKIE_SECURE: true },
     logger: pino({ level: 'silent' }),
     errorReporter,
     readinessProbe:

@@ -18,6 +18,8 @@ export const envSchema = z.object({
   /** Number of reverse proxies in front of the API whose X-Forwarded-* headers are trusted. */
   TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(0),
   SHUTDOWN_TIMEOUT_MS: z.coerce.number().int().min(1000).max(60_000).default(10_000),
+  /** AUTH-20: send the session cookie only over HTTPS. Disable only for plain-HTTP local runs. */
+  COOKIE_SECURE: booleanString.default(true),
   /** Absolute session lifetime (spec 01, Session). */
   SESSION_TTL_HOURS: z.coerce
     .number()

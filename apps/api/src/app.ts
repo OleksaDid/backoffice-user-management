@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
+import cookie from '@fastify/cookie';
 import helmet from '@fastify/helmet';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
@@ -14,25 +15,31 @@ import type { Logger } from 'pino';
 
 import type { Config } from './config/env.js';
 import { registerErrorHandling } from './http/error-handler.js';
+import { authRoutes } from './http/routes/auth.js';
 import { healthRoutes, type ReadinessProbe } from './http/routes/health.js';
 import { sessionRoutes } from './http/routes/sessions.js';
 import { userRoutes } from './http/routes/users.js';
 import type { App } from './http/types.js';
 import type { ErrorReporter } from './infra/error-reporter.js';
+import type { AuthService } from './services/auth-service.js';
+import { type Clock, systemClock } from './services/clock.js';
 import type { SessionService } from './services/session-service.js';
 import type { UserService } from './services/user-service.js';
 
 export const API_PREFIX = '/api';
 
 export interface AppDependencies {
-  config: Pick<Config, 'NODE_ENV' | 'TRUST_PROXY_HOPS'>;
+  config: Pick<Config, 'NODE_ENV' | 'TRUST_PROXY_HOPS' | 'COOKIE_SECURE'>;
   logger: Logger;
   errorReporter: ErrorReporter;
   readinessProbe: ReadinessProbe;
   services: {
     users: UserService;
     sessions: SessionService;
+    auth: AuthService;
   };
+  /** Defaults to the system clock; tests pass a controllable one. */
+  clock?: Clock;
 }
 
 const REQUEST_ID_PATTERN = /^[\w-]{8,128}$/;
@@ -67,6 +74,9 @@ export async function buildApp(deps: AppDependencies): Promise<App> {
     }
   });
 
+  await app.register(cookie);
+  app.decorateRequest('auth', null);
+
   // JSON API: the HTML security policy is set by the web server; keep the other headers.
   await app.register(helmet, { contentSecurityPolicy: false, global: true });
 
@@ -86,6 +96,14 @@ export async function buildApp(deps: AppDependencies): Promise<App> {
   await app.register(swaggerUi, { routePrefix: `${API_PREFIX}/docs` });
 
   await app.register(healthRoutes(deps.readinessProbe), { prefix: API_PREFIX });
+  await app.register(
+    authRoutes(
+      deps.services.auth,
+      { secure: deps.config.COOKIE_SECURE },
+      deps.clock ?? systemClock,
+    ),
+    { prefix: API_PREFIX },
+  );
   await app.register(userRoutes(deps.services.users), { prefix: API_PREFIX });
   await app.register(sessionRoutes(deps.services.sessions), { prefix: API_PREFIX });
 

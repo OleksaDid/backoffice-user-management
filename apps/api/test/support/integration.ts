@@ -8,6 +8,7 @@ import type { App } from '../../src/http/types.js';
 import { LoggerErrorReporter } from '../../src/infra/error-reporter.js';
 import { createUnitOfWork } from '../../src/repositories/unit-of-work.js';
 import { PasswordHasher } from '../../src/security/password-hasher.js';
+import { AuthService } from '../../src/services/auth-service.js';
 import { SessionService } from '../../src/services/session-service.js';
 import { UserService } from '../../src/services/user-service.js';
 import { startTestDatabase, type TestDatabase } from './database.js';
@@ -50,13 +51,15 @@ export function useIntegrationApp(options: { sessionTtlHours?: number } = {}): I
     const clock = () => context.clock.now;
     const logger = pino({ level: 'silent' });
     context.app = await buildApp({
-      config: { NODE_ENV: 'test', TRUST_PROXY_HOPS: 0 },
+      config: { NODE_ENV: 'test', TRUST_PROXY_HOPS: 0, COOKIE_SECURE: true },
+      clock,
       logger,
       errorReporter: new LoggerErrorReporter(logger),
       readinessProbe: createReadinessProbe(context.database.db),
       services: {
         users: new UserService(uow, clock, testHasher),
         sessions: new SessionService(uow, clock, options.sessionTtlHours ?? 168),
+        auth: new AuthService(uow, clock, testHasher, options.sessionTtlHours ?? 168),
       },
     });
     await context.app.ready();
