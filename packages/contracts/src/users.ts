@@ -34,15 +34,11 @@ export const createUserBodySchema = z.strictObject({
 });
 export type CreateUserBody = z.infer<typeof createUserBodySchema>;
 
-/** USR-07, USR-08: profile fields only, at least one of them. */
-export const updateUserProfileBodySchema = z
-  .strictObject({
-    firstName: personNameSchema.optional(),
-    lastName: personNameSchema.optional(),
-  })
-  .refine((body) => body.firstName !== undefined || body.lastName !== undefined, {
-    error: 'Provide firstName and/or lastName',
-  });
+/** USR-07, USR-08: profile fields only, both required. */
+export const updateUserProfileBodySchema = z.strictObject({
+  firstName: personNameSchema,
+  lastName: personNameSchema,
+});
 export type UpdateUserProfileBody = z.infer<typeof updateUserProfileBodySchema>;
 
 /** USR-10: status has its own endpoint. */

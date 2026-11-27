@@ -26,12 +26,20 @@ describe('user schemas', () => {
     ).toBe(false);
   });
 
-  it('USR-08 accepts profile fields only and requires at least one', () => {
-    expect(updateUserProfileBodySchema.safeParse({ firstName: 'Ada' }).success).toBe(true);
+  it('USR-07 USR-08 accepts profile fields only and requires both names', () => {
+    expect(
+      updateUserProfileBodySchema.safeParse({ firstName: 'Ada', lastName: 'King' }).success,
+    ).toBe(true);
+    expect(updateUserProfileBodySchema.safeParse({ firstName: 'Ada' }).success).toBe(false);
+    expect(updateUserProfileBodySchema.safeParse({ lastName: 'King' }).success).toBe(false);
     expect(updateUserProfileBodySchema.safeParse({}).success).toBe(false);
     expect(updateUserProfileBodySchema.safeParse({ status: 'inactive' }).success).toBe(false);
     expect(
-      updateUserProfileBodySchema.safeParse({ firstName: 'Ada', createdAt: '2020-01-01' }).success,
+      updateUserProfileBodySchema.safeParse({
+        firstName: 'Ada',
+        lastName: 'King',
+        createdAt: '2020-01-01',
+      }).success,
     ).toBe(false);
   });
 

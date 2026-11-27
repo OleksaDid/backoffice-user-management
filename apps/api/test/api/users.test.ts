@@ -132,13 +132,15 @@ describe('users API (integration)', () => {
     expect(response.json()).toMatchObject({ firstName: 'Augusta', lastName: 'King' });
   });
 
-  it('USR-08 rejects status and read-only fields in profile updates', async () => {
+  it('USR-07 USR-08 requires both names and rejects status and read-only fields', async () => {
     const user = await createUser();
 
     for (const payload of [
       { status: 'inactive' },
-      { firstName: 'Ada', createdAt: '2020-01-01T00:00:00.000Z' },
-      { firstName: 'Ada', id: MISSING_ID },
+      { firstName: 'Ada', lastName: 'King', createdAt: '2020-01-01T00:00:00.000Z' },
+      { firstName: 'Ada', lastName: 'King', id: MISSING_ID },
+      { firstName: 'Ada' },
+      { lastName: 'King' },
       {},
     ]) {
       const response = await ctx.app.inject({
@@ -156,7 +158,7 @@ describe('users API (integration)', () => {
     const response = await ctx.app.inject({
       method: 'PATCH',
       url: `/api/users/${user.id}`,
-      payload: { firstName: 'Changed' },
+      payload: { firstName: 'Changed', lastName: 'Lovelace' },
     });
 
     expect(response.statusCode).toBe(409);
@@ -212,7 +214,7 @@ describe('users API (integration)', () => {
     const renamed = await ctx.app.inject({
       method: 'PATCH',
       url: `/api/users/${user.id}`,
-      payload: { lastName: 'Byron' },
+      payload: { firstName: 'Ada', lastName: 'Byron' },
     });
     expect(renamed.json()).toMatchObject({
       createdAt: user.createdAt,
@@ -248,7 +250,11 @@ describe('users API (integration)', () => {
 
   it('USR-14 answers 404 for unknown and 400 for malformed ids', async () => {
     const requests = [
-      { method: 'PATCH' as const, url: '/api/users/ID', payload: { firstName: 'X' } },
+      {
+        method: 'PATCH' as const,
+        url: '/api/users/ID',
+        payload: { firstName: 'X', lastName: 'Y' },
+      },
       { method: 'PUT' as const, url: '/api/users/ID/status', payload: { status: 'active' } },
       { method: 'DELETE' as const, url: '/api/users/ID' },
     ];
