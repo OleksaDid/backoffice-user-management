@@ -7,6 +7,8 @@ export interface UserEntity {
   id: string;
   firstName: string;
   lastName: string;
+  /** Null only for users created before credentials existed (spec 06). */
+  email: string | null;
   status: UserStatus;
   loginsCount: number;
   createdAt: Date;
@@ -50,5 +52,12 @@ export function endsSessions(changes: UserChanges): boolean {
 export function assertCanStartSession(user: UserEntity): void {
   if (user.status === 'inactive') {
     throw new AppError('USER_INACTIVE');
+  }
+}
+
+/** AUTH-30: nobody can deactivate or delete their own account (no self lock-out). */
+export function assertNotSelf(actorId: string, targetId: string): void {
+  if (actorId === targetId) {
+    throw new AppError('SELF_MODIFICATION_FORBIDDEN');
   }
 }

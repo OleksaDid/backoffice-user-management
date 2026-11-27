@@ -11,16 +11,21 @@ import {
 import type { FastifyPluginCallbackZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 
+import type { AuthService } from '../../services/auth-service.js';
 import type { UserService } from '../../services/user-service.js';
+import { authOf, requireAuth } from '../auth.js';
 import { toUserDto } from '../mappers.js';
 
 const problem = problemDetailsSchema;
 const tags = ['users'];
 
-/** Users API (spec 01). */
+/** Users API (spec 01); every route requires an active session (AUTH-08). */
 export const userRoutes =
-  (users: UserService): FastifyPluginCallbackZod =>
+  (users: UserService, auth: AuthService): FastifyPluginCallbackZod =>
   (app, _options, done) => {
+    // Before validation: anonymous requests get 401, never schema details.
+    app.addHook('preValidation', requireAuth(auth));
+
     app.get(
       '/users',
       {
@@ -42,9 +47,9 @@ export const userRoutes =
       {
         schema: {
           tags,
-          summary: 'Create a user',
+          summary: 'Create a user with an initial password',
           body: createUserBodySchema,
-          response: { 201: userSchema, 400: problem },
+          response: { 201: userSchema, 400: problem, 409: problem },
         },
       },
       async (request, reply) => {
@@ -75,10 +80,13 @@ export const userRoutes =
           summary: "Set a user's status; deactivation terminates their sessions",
           params: userIdParamsSchema,
           body: updateUserStatusBodySchema,
-          response: { 200: userSchema, 400: problem, 404: problem },
+          response: { 200: userSchema, 400: problem, 404: problem, 409: problem },
         },
       },
-      async (request) => toUserDto(await users.setStatus(request.params.id, request.body.status)),
+      async (request) =>
+        toUserDto(
+          await users.setStatus(authOf(request).user.id, request.params.id, request.body.status),
+        ),
     );
 
     app.delete(
@@ -86,13 +94,13 @@ export const userRoutes =
       {
         schema: {
           tags,
-          summary: 'Delete a user and their sessions',
+          summary: 'Delete a user and their sessions (not yourself)',
           params: userIdParamsSchema,
-          response: { 204: z.null(), 400: problem, 404: problem },
+          response: { 204: z.null(), 400: problem, 404: problem, 409: problem },
         },
       },
       async (request, reply) => {
-        await users.delete(request.params.id);
+        await users.delete(authOf(request).user.id, request.params.id);
         return reply.status(204).send(null);
       },
     );

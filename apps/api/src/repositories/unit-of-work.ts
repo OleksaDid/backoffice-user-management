@@ -1,4 +1,5 @@
 import type { Database } from '../db/client.js';
+import { CredentialRepository } from './credential-repository.js';
 import type { Executor } from './executor.js';
 import { SessionRepository } from './session-repository.js';
 import { UserRepository } from './user-repository.js';
@@ -6,6 +7,7 @@ import { UserRepository } from './user-repository.js';
 export interface Repositories {
   users: UserRepository;
   sessions: SessionRepository;
+  credentials: CredentialRepository;
 }
 
 /**
@@ -18,7 +20,11 @@ export interface UnitOfWork {
 }
 
 function bind(executor: Executor): Repositories {
-  return { users: new UserRepository(executor), sessions: new SessionRepository(executor) };
+  return {
+    users: new UserRepository(executor),
+    sessions: new SessionRepository(executor),
+    credentials: new CredentialRepository(executor),
+  };
 }
 
 export function createUnitOfWork(db: Database): UnitOfWork {

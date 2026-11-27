@@ -29,6 +29,9 @@ services:
       LOG_LEVEL: info
       # The web server is the only proxy in front of the API.
       TRUST_PROXY_HOPS: '1'
+      PUBLIC_ORIGIN: http://localhost:8080
+      # Plain HTTP locally; servers keep the default (Secure cookies).
+      COOKIE_SECURE: 'false'
     depends_on:
       db:
         condition: service_healthy

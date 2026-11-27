@@ -9,6 +9,7 @@ export function toUserDto(user: UserEntity): User {
     id: user.id,
     firstName: user.firstName,
     lastName: user.lastName,
+    email: user.email,
     status: user.status,
     loginsCount: user.loginsCount,
     createdAt: user.createdAt.toISOString(),

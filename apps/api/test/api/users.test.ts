@@ -1,37 +1,58 @@
-import type { Paginated, Session, User } from '@backoffice/contracts';
+import type { AuthResponse, Paginated, Session, User } from '@backoffice/contracts';
 import { describe, expect, it } from 'vitest';
 
-import { useIntegrationApp } from '../support/integration.js';
+import { uniqueEmail, useIntegrationApp } from '../support/integration.js';
 
 const ctx = useIntegrationApp();
 const MISSING_ID = '7c9e6679-7425-40de-944b-e07fc1f90ae7';
 
 async function createUser(body: Record<string, unknown> = {}): Promise<User> {
-  const response = await ctx.app.inject({
+  const response = await ctx.inject({
     method: 'POST',
     url: '/api/users',
-    payload: { firstName: 'Ada', lastName: 'Lovelace', ...body },
+    payload: {
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+      email: uniqueEmail(),
+      password: 'correct horse',
+      ...body,
+    },
   });
   expect(response.statusCode).toBe(201);
   return response.json<User>();
 }
 
-async function createSession(userId: string): Promise<Session> {
+async function signIn(user: User): Promise<Session> {
   const response = await ctx.app.inject({
     method: 'POST',
-    url: '/api/sessions',
-    payload: { userId },
+    url: '/api/auth/sign-in',
+    payload: { email: user.email, password: 'correct horse' },
   });
-  expect(response.statusCode).toBe(201);
-  return response.json<Session>();
+  expect(response.statusCode).toBe(200);
+  return response.json<AuthResponse>().session;
 }
 
 async function listUsers(query = '') {
-  const response = await ctx.app.inject({ url: `/api/users${query}` });
+  const response = await ctx.inject({ url: `/api/users${query}` });
   return { response, body: response.json<Paginated<User>>() };
 }
 
 describe('users API (integration)', () => {
+  it('AUTH-08 every users endpoint requires a session', async () => {
+    const id = ctx.admin.user.id;
+    for (const request of [
+      { method: 'GET' as const, url: '/api/users' },
+      { method: 'POST' as const, url: '/api/users', payload: {} },
+      { method: 'PATCH' as const, url: `/api/users/${id}`, payload: {} },
+      { method: 'PUT' as const, url: `/api/users/${id}/status`, payload: {} },
+      { method: 'DELETE' as const, url: `/api/users/${id}` },
+    ]) {
+      const response = await ctx.app.inject(request);
+      expect(response.statusCode, `${request.method} ${request.url}`).toBe(401);
+      expect(response.json()).toMatchObject({ code: 'UNAUTHENTICATED' });
+    }
+  });
+
   it('USR-01 creates a user with zero logins and updatedAt equal to createdAt', async () => {
     const user = await createUser({ firstName: '  Ada ' });
 
@@ -48,10 +69,17 @@ describe('users API (integration)', () => {
   });
 
   it('USR-02 rejects unknown and read-only fields', async () => {
-    const response = await ctx.app.inject({
+    const response = await ctx.inject({
       method: 'POST',
       url: '/api/users',
-      payload: { firstName: 'Ada', lastName: '', loginsCount: 5, createdAt: '2020-01-01' },
+      payload: {
+        firstName: 'Ada',
+        lastName: '',
+        email: uniqueEmail(),
+        password: 'correct horse',
+        loginsCount: 5,
+        createdAt: '2020-01-01',
+      },
     });
 
     expect(response.statusCode).toBe(400);
@@ -62,6 +90,49 @@ describe('users API (integration)', () => {
     expect(paths).toEqual(['createdAt', 'lastName', 'loginsCount']);
   });
 
+  it('AUTH-12 stores a password hash and never returns the password', async () => {
+    const user = await createUser({ email: 'Grace@Example.com' });
+
+    expect(user.email).toBe('grace@example.com');
+    expect(JSON.stringify(user)).not.toContain('correct horse');
+    expect(user).not.toHaveProperty('password');
+    const stored = await ctx.database.pool.query<{ password_hash: string }>(
+      'select password_hash from user_credentials where user_id = $1',
+      [user.id],
+    );
+    expect(stored.rows[0]?.password_hash).toMatch(/^scrypt\$/);
+  });
+
+  it('AUTH-12 rejects a duplicate email regardless of case and creates nothing', async () => {
+    await createUser({ email: 'ada@example.com' });
+
+    const response = await ctx.inject({
+      method: 'POST',
+      url: '/api/users',
+      payload: {
+        firstName: 'Other',
+        lastName: 'Person',
+        email: 'ADA@example.com',
+        password: 'correct horse',
+      },
+    });
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json()).toMatchObject({ code: 'EMAIL_ALREADY_REGISTERED' });
+    expect((await listUsers()).body.totalItems).toBe(2);
+  });
+
+  it('AUTH-12 requires an email and a valid password', async () => {
+    for (const payload of [
+      { firstName: 'A', lastName: 'B', password: 'correct horse' },
+      { firstName: 'A', lastName: 'B', email: 'not-an-email', password: 'correct horse' },
+      { firstName: 'A', lastName: 'B', email: uniqueEmail(), password: 'short' },
+    ]) {
+      const response = await ctx.inject({ method: 'POST', url: '/api/users', payload });
+      expect(response.statusCode, JSON.stringify(payload)).toBe(400);
+    }
+  });
+
   it('USR-03 returns a page with totals', async () => {
     for (let i = 0; i < 8; i++) {
       await createUser({ firstName: `User${i}` });
@@ -70,9 +141,10 @@ describe('users API (integration)', () => {
 
     const { response, body } = await listUsers('?page=2');
 
+    // Eight created users plus the signed-in administrator.
     expect(response.statusCode).toBe(200);
-    expect(body).toMatchObject({ page: 2, pageSize: 6, totalItems: 8, totalPages: 2 });
-    expect(body.items).toHaveLength(2);
+    expect(body).toMatchObject({ page: 2, pageSize: 6, totalItems: 9, totalPages: 2 });
+    expect(body.items).toHaveLength(3);
   });
 
   it('USR-04 defaults to 6 per page and validates page parameters', async () => {
@@ -82,7 +154,7 @@ describe('users API (integration)', () => {
 
     expect((await listUsers()).body).toMatchObject({ page: 1, pageSize: 6 });
     expect((await listUsers()).body.items).toHaveLength(6);
-    expect((await listUsers('?pageSize=100')).body.items).toHaveLength(7);
+    expect((await listUsers('?pageSize=100')).body.items).toHaveLength(8);
     for (const query of ['?page=0', '?page=abc', '?pageSize=101', '?pageSize=0']) {
       expect((await listUsers(query)).response.statusCode, query).toBe(400);
     }
@@ -98,23 +170,16 @@ describe('users API (integration)', () => {
 
     const ids = (await listUsers()).body.items.map((user) => user.id);
     const tie = [sameTimeA.id, sameTimeB.id].sort().reverse();
-    expect(ids).toEqual([newest.id, ...tie, oldest.id]);
+    expect(ids).toEqual([newest.id, ...tie, oldest.id, ctx.admin.user.id]);
   });
 
   it('USR-06 returns an empty page beyond the last one', async () => {
-    expect((await listUsers()).body).toEqual({
-      items: [],
-      page: 1,
-      pageSize: 6,
-      totalItems: 0,
-      totalPages: 0,
-    });
-
     await createUser();
-    expect((await listUsers('?page=5')).body).toMatchObject({
+    expect((await listUsers('?page=5')).body).toEqual({
       items: [],
       page: 5,
-      totalItems: 1,
+      pageSize: 6,
+      totalItems: 2,
       totalPages: 1,
     });
   });
@@ -122,7 +187,7 @@ describe('users API (integration)', () => {
   it('USR-07 updates first and last name', async () => {
     const user = await createUser();
 
-    const response = await ctx.app.inject({
+    const response = await ctx.inject({
       method: 'PATCH',
       url: `/api/users/${user.id}`,
       payload: { firstName: 'Augusta', lastName: 'King' },
@@ -143,7 +208,7 @@ describe('users API (integration)', () => {
       { lastName: 'King' },
       {},
     ]) {
-      const response = await ctx.app.inject({
+      const response = await ctx.inject({
         method: 'PATCH',
         url: `/api/users/${user.id}`,
         payload,
@@ -155,7 +220,7 @@ describe('users API (integration)', () => {
   it('USR-09 rejects name changes for inactive users', async () => {
     const user = await createUser({ status: 'inactive' });
 
-    const response = await ctx.app.inject({
+    const response = await ctx.inject({
       method: 'PATCH',
       url: `/api/users/${user.id}`,
       payload: { firstName: 'Changed', lastName: 'Lovelace' },
@@ -171,7 +236,7 @@ describe('users API (integration)', () => {
     const user = await createUser();
 
     for (const status of ['inactive', 'inactive', 'active']) {
-      const response = await ctx.app.inject({
+      const response = await ctx.inject({
         method: 'PUT',
         url: `/api/users/${user.id}/status`,
         payload: { status },
@@ -180,7 +245,7 @@ describe('users API (integration)', () => {
       expect(response.json()).toMatchObject({ status });
     }
 
-    const invalid = await ctx.app.inject({
+    const invalid = await ctx.inject({
       method: 'PUT',
       url: `/api/users/${user.id}/status`,
       payload: { status: 'banned' },
@@ -190,10 +255,10 @@ describe('users API (integration)', () => {
 
   it('USR-11 deactivation terminates active sessions', async () => {
     const user = await createUser();
-    const first = await createSession(user.id);
-    const second = await createSession(user.id);
+    const first = await signIn(user);
+    const second = await signIn(user);
 
-    await ctx.app.inject({
+    await ctx.inject({
       method: 'PUT',
       url: `/api/users/${user.id}/status`,
       payload: { status: 'inactive' },
@@ -211,7 +276,7 @@ describe('users API (integration)', () => {
     const user = await createUser();
 
     ctx.clock.advance(60_000);
-    const renamed = await ctx.app.inject({
+    const renamed = await ctx.inject({
       method: 'PATCH',
       url: `/api/users/${user.id}`,
       payload: { firstName: 'Ada', lastName: 'Byron' },
@@ -222,7 +287,7 @@ describe('users API (integration)', () => {
     });
 
     ctx.clock.advance(60_000);
-    const sameStatus = await ctx.app.inject({
+    const sameStatus = await ctx.inject({
       method: 'PUT',
       url: `/api/users/${user.id}/status`,
       payload: { status: 'active' },
@@ -235,17 +300,39 @@ describe('users API (integration)', () => {
 
   it('USR-13 deletes the user and their sessions', async () => {
     const user = await createUser();
-    await createSession(user.id);
+    await signIn(user);
 
-    const response = await ctx.app.inject({ method: 'DELETE', url: `/api/users/${user.id}` });
+    const response = await ctx.inject({ method: 'DELETE', url: `/api/users/${user.id}` });
 
     expect(response.statusCode).toBe(204);
     expect(response.body).toBe('');
-    expect((await listUsers()).body.totalItems).toBe(0);
+    expect((await listUsers()).body.items.map((u) => u.id)).toEqual([ctx.admin.user.id]);
     const sessions = await ctx.database.pool.query('select 1 from sessions where user_id = $1', [
       user.id,
     ]);
     expect(sessions.rowCount).toBe(0);
+  });
+
+  it('AUTH-30 nobody can deactivate or delete their own account', async () => {
+    const self = ctx.admin.user.id;
+
+    const deactivate = await ctx.inject({
+      method: 'PUT',
+      url: `/api/users/${self}/status`,
+      payload: { status: 'inactive' },
+    });
+    const remove = await ctx.inject({ method: 'DELETE', url: `/api/users/${self}` });
+
+    for (const response of [deactivate, remove]) {
+      expect(response.statusCode).toBe(409);
+      expect(response.json()).toMatchObject({ code: 'SELF_MODIFICATION_FORBIDDEN' });
+    }
+    const stillActive = await ctx.inject({
+      method: 'PUT',
+      url: `/api/users/${self}/status`,
+      payload: { status: 'active' },
+    });
+    expect(stillActive.statusCode).toBe(200);
   });
 
   it('USR-14 answers 404 for unknown and 400 for malformed ids', async () => {
@@ -260,14 +347,14 @@ describe('users API (integration)', () => {
     ];
 
     for (const request of requests) {
-      const missing = await ctx.app.inject({
+      const missing = await ctx.inject({
         ...request,
         url: request.url.replace('ID', MISSING_ID),
       });
       expect(missing.statusCode, request.method).toBe(404);
       expect(missing.json()).toMatchObject({ code: 'USER_NOT_FOUND' });
 
-      const malformed = await ctx.app.inject({ ...request, url: request.url.replace('ID', 'abc') });
+      const malformed = await ctx.inject({ ...request, url: request.url.replace('ID', 'abc') });
       expect(malformed.statusCode, request.method).toBe(400);
     }
   });

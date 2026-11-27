@@ -30,7 +30,9 @@
   },
   "dependencies": {
     "@backoffice/contracts": "0.0.0",
+    "@fastify/cookie": "11.1.5",
     "@fastify/helmet": "13.2.0",
+    "@fastify/rate-limit": "11.3.0",
     "@fastify/swagger": "9.9.5",
     "@fastify/swagger-ui": "6.1.5",
     "close-with-grace": "2.5.0",

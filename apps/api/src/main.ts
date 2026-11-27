@@ -6,6 +6,8 @@ import { createDatabase } from './db/client.js';
 import { createReadinessProbe } from './db/migrations.js';
 import { LoggerErrorReporter } from './infra/error-reporter.js';
 import { createUnitOfWork } from './repositories/unit-of-work.js';
+import { PasswordHasher } from './security/password-hasher.js';
+import { AuthService } from './services/auth-service.js';
 import { systemClock } from './services/clock.js';
 import { SessionService } from './services/session-service.js';
 import { UserService } from './services/user-service.js';
@@ -36,14 +38,16 @@ async function main(): Promise<void> {
   });
 
   const uow = createUnitOfWork(database.db);
+  const hasher = new PasswordHasher();
   const app = await buildApp({
     config,
     logger,
     errorReporter,
     readinessProbe: createReadinessProbe(database.db),
     services: {
-      users: new UserService(uow, systemClock),
+      users: new UserService(uow, systemClock, hasher),
       sessions: new SessionService(uow, systemClock, config.SESSION_TTL_HOURS),
+      auth: new AuthService(uow, systemClock, hasher, config.SESSION_TTL_HOURS),
     },
   });
 

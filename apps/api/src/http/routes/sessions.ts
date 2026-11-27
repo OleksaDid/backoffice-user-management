@@ -1,37 +1,28 @@
-import {
-  createSessionBodySchema,
-  problemDetailsSchema,
-  sessionIdParamsSchema,
-  sessionSchema,
-} from '@backoffice/contracts';
+import { problemDetailsSchema, sessionIdParamsSchema } from '@backoffice/contracts';
 import type { FastifyPluginCallbackZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 
+import type { AuthService } from '../../services/auth-service.js';
 import type { SessionService } from '../../services/session-service.js';
-import { toSessionDto } from '../mappers.js';
+import { authOf, requireAuth } from '../auth.js';
+import { clearSessionCookie, type CookieSettings } from '../session-cookie.js';
 
 const problem = problemDetailsSchema;
 const tags = ['sessions'];
 
-/** Sessions API (spec 01). */
+/**
+ * Sessions API (spec 01). Sessions are created only by sign-up and sign-in (AUTH-09):
+ * creating one for an arbitrary user id would allow impersonation.
+ */
 export const sessionRoutes =
-  (sessions: SessionService): FastifyPluginCallbackZod =>
+  (
+    sessions: SessionService,
+    auth: AuthService,
+    cookies: CookieSettings,
+  ): FastifyPluginCallbackZod =>
   (app, _options, done) => {
-    app.post(
-      '/sessions',
-      {
-        schema: {
-          tags,
-          summary: 'Create a session for an active user',
-          body: createSessionBodySchema,
-          response: { 201: sessionSchema, 400: problem, 403: problem, 404: problem },
-        },
-      },
-      async (request, reply) => {
-        const session = await sessions.create(request.body.userId);
-        return reply.status(201).send(toSessionDto(session));
-      },
-    );
+    // Before validation: anonymous requests get 401, never schema details.
+    app.addHook('preValidation', requireAuth(auth));
 
     app.delete(
       '/sessions/:id',
@@ -40,11 +31,15 @@ export const sessionRoutes =
           tags,
           summary: 'Terminate a session (idempotent; the record is kept)',
           params: sessionIdParamsSchema,
-          response: { 204: z.null(), 400: problem, 404: problem },
+          response: { 204: z.null(), 400: problem, 401: problem, 404: problem },
         },
       },
       async (request, reply) => {
         await sessions.terminate(request.params.id);
+        // Ending one's own current session is the same as signing out (AUTH-09).
+        if (request.params.id === authOf(request).session.id) {
+          clearSessionCookie(reply, cookies);
+        }
         return reply.status(204).send(null);
       },
     );

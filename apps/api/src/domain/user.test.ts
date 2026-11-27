@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { AppError } from '../errors/app-error.js';
 import {
   assertCanStartSession,
+  assertNotSelf,
   endsSessions,
   profileChanges,
   statusChanges,
@@ -17,6 +18,7 @@ function user(overrides: Partial<UserEntity> = {}): UserEntity {
     id: 'u1',
     firstName: 'Ada',
     lastName: 'Lovelace',
+    email: 'ada@example.com',
     status: 'active',
     loginsCount: 0,
     createdAt: created,
@@ -79,5 +81,20 @@ describe('starting a session', () => {
         assertCanStartSession(user({ status: 'inactive' }));
       }),
     ).toBe('USER_INACTIVE');
+  });
+});
+
+describe('self-management', () => {
+  it('AUTH-30 forbids acting on your own account and allows others', () => {
+    expect(
+      codeOf(() => {
+        assertNotSelf('u1', 'u1');
+      }),
+    ).toBe('SELF_MODIFICATION_FORBIDDEN');
+    expect(
+      codeOf(() => {
+        assertNotSelf('u1', 'u2');
+      }),
+    ).toBeUndefined();
   });
 });

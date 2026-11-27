@@ -1,5 +1,7 @@
 // Shared contracts between the API and the web app.
 // Schemas are added together with the behaviour they describe (see docs/spec).
+export * from './auth.js';
+export * from './credentials.js';
 export * from './errors/catalog.js';
 export * from './errors/problem.js';
 export * from './pagination.js';
