@@ -23,8 +23,8 @@ const tags = ['users'];
 export const userRoutes =
   (users: UserService, auth: AuthService): FastifyPluginCallbackZod =>
   (app, _options, done) => {
-    // Before validation: anonymous requests get 401, never schema details.
-    app.addHook('preValidation', requireAuth(auth));
+    // Before the body is parsed: anonymous requests get 401, never parser or schema details.
+    app.addHook('onRequest', requireAuth(auth));
 
     app.get(
       '/users',

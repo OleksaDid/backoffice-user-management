@@ -21,8 +21,8 @@ export const sessionRoutes =
     cookies: CookieSettings,
   ): FastifyPluginCallbackZod =>
   (app, _options, done) => {
-    // Before validation: anonymous requests get 401, never schema details.
-    app.addHook('preValidation', requireAuth(auth));
+    // Before the body is parsed: anonymous requests get 401, never parser or schema details.
+    app.addHook('onRequest', requireAuth(auth));
 
     app.delete(
       '/sessions/:id',

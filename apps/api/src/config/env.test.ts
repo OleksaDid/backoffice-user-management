@@ -31,6 +31,17 @@ describe('loadConfig', () => {
     expect(loadConfig(minimal).PUBLIC_ORIGIN).toBe('http://localhost:8080');
   });
 
+  it('AUTH-20 refuses insecure session cookies in production', () => {
+    expect(() =>
+      loadConfig({
+        ...minimal,
+        NODE_ENV: 'production',
+        PUBLIC_ORIGIN: 'https://test.oleksa.live',
+        COOKIE_SECURE: 'false',
+      }),
+    ).toThrow(/COOKIE_SECURE/);
+  });
+
   it('NFR-15 refuses to start without a database URL', () => {
     expect(() => loadConfig({})).toThrow(ConfigError);
   });

@@ -30,7 +30,9 @@ services:
       # The web server is the only proxy in front of the API.
       TRUST_PROXY_HOPS: '1'
       PUBLIC_ORIGIN: http://localhost:8080
-      # Plain HTTP locally; servers keep the default (Secure cookies).
+      # Plain HTTP locally: insecure cookies are only accepted outside production mode
+      # (AUTH-20); servers run in production mode with the default Secure cookies.
+      NODE_ENV: development
       COOKIE_SECURE: 'false'
       # CI raises it so the end-to-end suite is not throttled.
       AUTH_RATE_LIMIT_PER_MINUTE: ${AUTH_RATE_LIMIT_PER_MINUTE:-10}

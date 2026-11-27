@@ -57,8 +57,15 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     );
   }
   const { PUBLIC_ORIGIN, ...rest } = result.data;
-  if (!PUBLIC_ORIGIN && rest.NODE_ENV === 'production') {
-    throw new ConfigError(['PUBLIC_ORIGIN: required in production']);
+  if (rest.NODE_ENV === 'production') {
+    const problems = [
+      ...(PUBLIC_ORIGIN ? [] : ['PUBLIC_ORIGIN: required in production']),
+      // AUTH-20: Secure may be disabled only for local plain-HTTP development.
+      ...(rest.COOKIE_SECURE ? [] : ['COOKIE_SECURE: must be true in production']),
+    ];
+    if (problems.length > 0) {
+      throw new ConfigError(problems);
+    }
   }
   // Origins never end with a slash; normalise so the comparison is exact.
   return { ...rest, PUBLIC_ORIGIN: new URL(PUBLIC_ORIGIN ?? DEFAULT_PUBLIC_ORIGIN).origin };

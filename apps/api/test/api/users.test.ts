@@ -38,6 +38,17 @@ async function listUsers(query = '') {
 }
 
 describe('users API (integration)', () => {
+  it('AUTH-08 anonymous requests are rejected before the body is parsed', async () => {
+    const response = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/users',
+      headers: { 'content-type': 'application/json' },
+      payload: '{"firstName":',
+    });
+    expect(response.statusCode).toBe(401);
+    expect(response.json()).toMatchObject({ code: 'UNAUTHENTICATED' });
+  });
+
   it('AUTH-08 every users endpoint requires a session', async () => {
     const id = ctx.admin.user.id;
     for (const request of [
@@ -280,6 +291,32 @@ describe('users API (integration)', () => {
     );
     expect(rows.rows.map((row) => row.id).sort()).toEqual([first.id, second.id].sort());
     expect(rows.rows.every((row) => row.terminated_at !== null)).toBe(true);
+  });
+
+  it('USR-11 SES-05 deactivation leaves already expired sessions unchanged', async () => {
+    const user = await createUser();
+    const session = await signIn(user);
+    ctx.clock.advance(169 * 60 * 60 * 1000); // past the 168-hour lifetime
+    // The administrator's own session expired too; sign in again.
+    const admin = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/auth/sign-in',
+      payload: { email: 'admin@example.com', password: 'admin password' },
+    });
+    const sid = admin.json<AuthResponse>().session.id;
+
+    await ctx.app.inject({
+      method: 'PUT',
+      url: `/api/users/${user.id}/status`,
+      payload: { status: 'inactive' },
+      cookies: { sid },
+    });
+
+    const row = await ctx.database.pool.query<{ terminated_at: Date | null }>(
+      'select terminated_at from sessions where id = $1',
+      [session.id],
+    );
+    expect(row.rows[0]?.terminated_at).toBeNull();
   });
 
   it('USR-12 DATA-10 every update refreshes updatedAt and keeps createdAt', async () => {
