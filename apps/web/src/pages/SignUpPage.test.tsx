@@ -1,5 +1,5 @@
 import { screen } from '@testing-library/react';
-import { http, HttpResponse } from 'msw';
+import { delay, http, HttpResponse } from 'msw';
 import { describe, expect, it, vi } from 'vitest';
 
 import { adaAuth, mockSession, problem, renderApp } from '../test/render-app';
@@ -129,5 +129,31 @@ describe('sign-up page', () => {
     const heading = await screen.findByRole('heading', { level: 1, name: 'Sign in' });
     expect(router.state.location.pathname).toBe('/sign-in');
     expect(heading).toHaveFocus();
+  });
+});
+
+describe('sign-up submission', () => {
+  it('UI-AUTH-07 shows a loading state and sends the request only once', async () => {
+    mockSession(null);
+    let requests = 0;
+    server.use(
+      http.post('/api/auth/sign-up', async () => {
+        requests += 1;
+        await delay(200);
+        return HttpResponse.json(adaAuth, { status: 201 });
+      }),
+    );
+    const { user } = renderApp('/sign-up');
+    await screen.findByRole('heading', { name: 'Create your account' });
+    await fillSignUp(user);
+
+    const submit = screen.getByRole('button', { name: 'Sign up' });
+    await user.click(submit);
+    await user.click(submit);
+
+    expect(submit).toHaveAttribute('data-loading');
+    expect(submit).toBeDisabled();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Hello Ada' })).toBeVisible();
+    expect(requests).toBe(1);
   });
 });
