@@ -22,7 +22,7 @@ describe('demo data reset (integration)', () => {
   it('NFR-34 replaces all users and sessions with the demo set, repeatably', async () => {
     const [someone] = await database.db
       .insert(users)
-      .values({ firstName: 'Temp', lastName: 'User' })
+      .values({ firstName: 'Temp', lastName: 'User', email: 'temp@example.com' })
       .returning();
     await database.db
       .insert(sessions)

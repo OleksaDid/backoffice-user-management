@@ -1,8 +1,12 @@
+import { cp, mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { sql } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { startTestDatabase, type TestDatabase } from '../../test/support/database.js';
-import { createReadinessProbe, runMigrations } from './migrations.js';
+import { createReadinessProbe, MIGRATIONS_FOLDER, runMigrations } from './migrations.js';
 
 describe('migrations (integration)', () => {
   let database: TestDatabase;
@@ -38,11 +42,11 @@ describe('migrations (integration)', () => {
     ]);
   });
 
-  it('DATA-02 the expand step keeps email nullable, so Part 0 writes still work', async () => {
+  it('DATA-02 after the contract step email is required', async () => {
     const result = await database.db.execute<{ is_nullable: string }>(
       sql`select is_nullable from information_schema.columns where table_name = 'users' and column_name = 'email'`,
     );
-    expect(result.rows[0]?.is_nullable).toBe('YES');
+    expect(result.rows[0]?.is_nullable).toBe('NO');
   });
 
   it('AUTH-10 emails are unique regardless of case', async () => {
@@ -54,6 +58,29 @@ describe('migrations (integration)', () => {
         sql`insert into users (first_name, last_name, email) values ('C', 'D', 'ada@example.COM')`,
       ),
     ).rejects.toThrow();
+  });
+});
+
+describe('expand/contract on existing data (integration)', () => {
+  it('DATA-02 rows from before credentials get a placeholder email, then email is required', async () => {
+    const database = await startTestDatabase({ migrate: false });
+    const folder = await migrationsUpTo('0001_user_credentials');
+    await runMigrations(database.db, folder);
+    await database.db.execute(
+      sql`insert into users (first_name, last_name) values ('Legacy', 'User')`,
+    );
+    await database.db.execute(
+      sql`insert into users (first_name, last_name, email) values ('New', 'User', 'new@example.com')`,
+    );
+
+    await runMigrations(database.db);
+
+    const rows = await database.db.execute<{ first_name: string; email: string }>(
+      sql`select first_name, email from users order by first_name`,
+    );
+    expect(rows.rows[0]?.email).toMatch(/^legacy-[0-9a-f-]{36}@example\.invalid$/);
+    expect(rows.rows[1]?.email).toBe('new@example.com');
+    await database.stop();
   });
 });
 
@@ -72,3 +99,17 @@ describe('readiness when the database goes away (integration)', () => {
     },
   );
 });
+
+/** A copy of the migrations folder that stops after `lastTag`, to replay history. */
+async function migrationsUpTo(lastTag: string): Promise<string> {
+  const folder = await mkdtemp(join(tmpdir(), 'migrations-'));
+  await cp(MIGRATIONS_FOLDER, folder, { recursive: true });
+  const journalPath = join(folder, 'meta', '_journal.json');
+  const journal = JSON.parse(await readFile(journalPath, 'utf8')) as {
+    entries: { tag: string }[];
+  };
+  const last = journal.entries.findIndex((entry) => entry.tag === lastTag);
+  journal.entries = journal.entries.slice(0, last + 1);
+  await writeFile(journalPath, JSON.stringify(journal));
+  return folder;
+}

@@ -20,8 +20,7 @@ export const userSchema = z
     id: z.uuid(),
     firstName: z.string(),
     lastName: z.string(),
-    /** Null only for users created before credentials existed (spec 06, legacy rows). */
-    email: z.string().nullable(),
+    email: z.string(),
     status: userStatusSchema,
     loginsCount: z.number().int().min(0),
     createdAt: z.iso.datetime(),

@@ -7,8 +7,7 @@ export interface UserEntity {
   id: string;
   firstName: string;
   lastName: string;
-  /** Null only for users created before credentials existed (spec 06). */
-  email: string | null;
+  email: string;
   status: UserStatus;
   loginsCount: number;
   createdAt: Date;
