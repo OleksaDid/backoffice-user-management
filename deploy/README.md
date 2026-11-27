@@ -113,12 +113,12 @@ Chain: Cloudflare edge → cloudflared → `web` (:8080, HTTP) → `api` (:3000)
 
 ## GitHub Actions
 
-| Workflow       | Trigger                         | Does                                                                           |
-| -------------- | ------------------------------- | ------------------------------------------------------------------------------ |
-| `ci.yml`       | pull requests, pushes to `main` | checks, tests, image build, full-stack smoke test                              |
-| `delivery.yml` | push to `main`                  | publish `sha-<commit>` images → deploy staging → update release PR             |
-| `release.yml`  | release published (`vX.Y.Z`)    | retag the staging-tested images to `vX.Y.Z` → deploy production after approval |
-| `deploy.yml`   | called by the two above         | Tailscale + SSH `deploy <env> <tag>`, smoke test, `rollback` on failure        |
+| Workflow       | Trigger                         | Does                                                                                                  |
+| -------------- | ------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `ci.yml`       | pull requests, pushes to `main` | checks, tests, image build, full-stack smoke test                                                     |
+| `delivery.yml` | push to `main`                  | publish `sha-<commit>` images → deploy staging → full e2e on staging (3 browsers) → update release PR |
+| `release.yml`  | release published (`vX.Y.Z`)    | retag the staging-tested images to `vX.Y.Z` → deploy production after approval                        |
+| `deploy.yml`   | called by the two above         | Tailscale + SSH `deploy <env> <tag>`, smoke test, `rollback` on failure                               |
 
 The release PR and the release itself are created with the `RELEASE_PLEASE_TOKEN` repository
 secret (a fine-grained token with contents and pull request write access): events created with

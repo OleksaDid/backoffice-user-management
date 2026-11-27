@@ -32,7 +32,10 @@ npm install                      # install all workspaces and git hooks
 npm run format                   # Prettier write
 npm run lint                     # ESLint (type-aware)
 npm run typecheck                # tsc in every workspace
-npm test                         # unit + integration tests (integration needs Docker)
+npm test                         # unit, integration (needs Docker) and component tests
+npm run test:coverage            # the same with coverage thresholds
+npm run e2e                      # Playwright against http://localhost:8080 (E2E_BROWSERS=chromium)
+npm run traceability             # regenerate docs/traceability.md after changing test titles
 npm run check:branch             # validate the current branch name
 
 docker compose up --build        # full stack, production-like
@@ -88,5 +91,6 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md). In short:
 ## Definition of done
 
 - Spec updated, tests added (unit, integration or e2e as appropriate) with spec IDs.
-- `npm run format:check && npm run lint && npm run typecheck && npm test` pass locally.
+- `npm run format:check && npm run lint && npm run typecheck && npm run test:coverage` pass
+  locally, and `npm run traceability:check` if test titles changed.
 - Docs updated for changed behaviour, commands or decisions.
