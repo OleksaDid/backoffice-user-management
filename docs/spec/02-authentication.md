@@ -54,6 +54,19 @@ browser sends it with every further request and page scripts cannot read it.
 - **AUTH-22** The response body of sign-up and sign-in includes the `session` object (with its id),
   as the original requirements describe. The web app does not read or store it.
 
+## Concurrent sessions
+
+- **AUTH-23** A user may have several active sessions at once, one per device or browser. Signing
+  in creates an additional session and does not terminate the user's other sessions; signing out
+  terminates only the current one.
+
+  > Given Ada is signed in on a laptop, when she signs in on a phone, then both sessions are
+  > active; when she signs out on the phone, the laptop session stays active.
+
+  Other sessions end only when the user is deactivated (USR-11) or deleted (USR-13), when they
+  expire, or when they are terminated explicitly (SES-04). A list of active sessions with "sign out
+  everywhere else" is a future improvement.
+
 ## Self-management
 
 - **AUTH-30** A user cannot deactivate (USR-10) or delete (USR-13) their own account: `409
