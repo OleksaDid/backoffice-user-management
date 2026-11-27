@@ -1,4 +1,24 @@
-import { Anchor, type CSSVariablesResolver, createTheme, Modal } from '@mantine/core';
+import {
+  Anchor,
+  type CSSVariablesResolver,
+  createTheme,
+  type MantineColorsTuple,
+  Modal,
+} from '@mantine/core';
+
+/** Brand palette, darkest at the end; the theme and the CSS variables share it. */
+const BRAND = [
+  '#e8f1fb',
+  '#cfdff2',
+  '#a2bfe4',
+  '#729dd6',
+  '#4a80ca',
+  '#316ec3',
+  '#2363b9',
+  '#1c4f8c',
+  '#14407a',
+  '#07345f',
+] as const satisfies MantineColorsTuple;
 
 /**
  * Design tokens. Mantine exposes them as CSS variables, so components and our own CSS
@@ -9,18 +29,7 @@ export const theme = createTheme({
   // Filled buttons keep white text at AA contrast in both schemes (found by axe).
   primaryShade: { light: 7, dark: 6 },
   colors: {
-    brand: [
-      '#e8f1fb',
-      '#cfdff2',
-      '#a2bfe4',
-      '#729dd6',
-      '#4a80ca',
-      '#316ec3',
-      '#2363b9',
-      '#1c4f8c',
-      '#14407a',
-      '#07345f',
-    ],
+    brand: BRAND,
   },
   fontFamily:
     'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
@@ -47,6 +56,6 @@ export const cssVariablesResolver: CSSVariablesResolver = (current) => ({
   dark: {
     '--mantine-color-dimmed': current.colors.gray[4],
     // Links on the dark background need a light brand tint for 4.5:1.
-    '--mantine-color-anchor': current.colors.brand?.[2] ?? current.colors.blue[3],
+    '--mantine-color-anchor': BRAND[2],
   },
 });
