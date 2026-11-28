@@ -10,7 +10,6 @@ import { z } from 'zod';
 
 import type { Clock } from '../../services/clock.js';
 import type { AuthService, Authenticated } from '../../services/auth-service.js';
-import { authOf, requireAuth } from '../auth.js';
 import { toSessionDto, toUserDto } from '../mappers.js';
 import {
   clearSessionCookie,
@@ -99,17 +98,24 @@ export const authRoutes =
     app.get(
       '/auth/me',
       {
-        onRequest: requireAuth(auth),
         schema: {
           tags,
-          summary: 'The signed-in user and their session',
-          response: { 200: meResponseSchema, 401: problem },
+          summary: 'The signed-in user and their session, or nulls when nobody is signed in',
+          response: { 200: meResponseSchema },
         },
       },
-      (request) => {
-        const { user, session } = authOf(request);
-        const { id: _credential, ...currentSession } = toSessionDto(session);
-        return { user: toUserDto(user), session: currentSession };
+      async (request, reply) => {
+        const sid = request.cookies[SESSION_COOKIE];
+        const current = await auth.authenticate(sid);
+        if (!current) {
+          // A cookie that no longer opens a session is cleared, so the browser stops sending it.
+          if (sid !== undefined) {
+            clearSessionCookie(reply, cookies);
+          }
+          return { user: null, session: null };
+        }
+        const { id: _credential, ...currentSession } = toSessionDto(current.session);
+        return { user: toUserDto(current.user), session: currentSession };
       },
     );
 

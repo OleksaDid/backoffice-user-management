@@ -36,6 +36,13 @@ function me(sid?: string) {
   return ctx.app.inject({ url: '/api/auth/me', ...(sid ? { cookies: { sid } } : {}) });
 }
 
+/** Whether /auth/me reports a signed-in user for this cookie (it always answers 200). */
+async function signedIn(sid?: string): Promise<boolean> {
+  const response = await me(sid);
+  expect(response.statusCode).toBe(200);
+  return response.json<{ user: unknown }>().user !== null;
+}
+
 describe('authentication API (integration)', () => {
   it('AUTH-01 sign-up creates an active user with one login and starts a session', async () => {
     const response = await signUp();
@@ -115,7 +122,7 @@ describe('authentication API (integration)', () => {
   it('AUTH-08 a session of a user who is no longer active does not authenticate', async () => {
     const sid = sessionCookie(await signUp());
     await ctx.database.pool.query("update users set status = 'inactive'");
-    expect((await me(sid)).statusCode).toBe(401);
+    expect(await signedIn(sid)).toBe(false);
   });
 
   it('AUTH-06 sign-out ends the session and clears the cookie, even without a session', async () => {
@@ -129,7 +136,7 @@ describe('authentication API (integration)', () => {
     expect(response.statusCode).toBe(204);
     const cleared = response.cookies.find((c) => c.name === 'sid');
     expect(cleared?.value).toBe('');
-    expect((await me(sid)).statusCode).toBe(401);
+    expect(await signedIn(sid)).toBe(false);
 
     const anonymous = await ctx.app.inject({ method: 'POST', url: '/api/auth/sign-out' });
     expect(anonymous.statusCode).toBe(204);
@@ -146,17 +153,23 @@ describe('authentication API (integration)', () => {
     expect(response.body).not.toContain(signedUp.session.id);
   });
 
-  it('AUTH-08 me without, with an unknown, a malformed or an expired session is 401', async () => {
+  it('AUTH-07 me answers nulls without, with an unknown, a malformed or an expired session', async () => {
     const sid = sessionCookie(await signUp());
 
     for (const value of [undefined, '7c9e6679-7425-40de-944b-e07fc1f90ae7', 'garbage']) {
       const response = await me(value);
-      expect(response.statusCode).toBe(401);
-      expect(response.json()).toMatchObject({ code: 'UNAUTHENTICATED' });
+      expect(response.statusCode).toBe(200);
+      expect(response.json()).toEqual({ user: null, session: null });
     }
 
     ctx.clock.advance(24 * 60 * 60 * 1000);
-    expect((await me(sid)).statusCode).toBe(401);
+    expect(await signedIn(sid)).toBe(false);
+  });
+
+  it('AUTH-07 a cookie that no longer opens a session is cleared', async () => {
+    const response = await me('7c9e6679-7425-40de-944b-e07fc1f90ae7');
+    expect(response.cookies.find((c) => c.name === 'sid')?.value).toBe('');
+    expect((await me()).cookies).toHaveLength(0);
   });
 
   it('AUTH-20 NFR-11 the cookie is httpOnly, Secure, SameSite=Strict, API-scoped and lives as long as the session', async () => {
@@ -183,11 +196,11 @@ describe('authentication API (integration)', () => {
     const phone = sessionCookie(await signIn());
     expect(phone).not.toBe(laptop);
 
-    expect((await me(laptop)).statusCode).toBe(200);
-    expect((await me(phone)).statusCode).toBe(200);
+    expect(await signedIn(laptop)).toBe(true);
+    expect(await signedIn(phone)).toBe(true);
 
     await ctx.app.inject({ method: 'POST', url: '/api/auth/sign-out', cookies: { sid: phone } });
-    expect((await me(phone)).statusCode).toBe(401);
-    expect((await me(laptop)).statusCode).toBe(200);
+    expect(await signedIn(phone)).toBe(false);
+    expect(await signedIn(laptop)).toBe(true);
   });
 });
