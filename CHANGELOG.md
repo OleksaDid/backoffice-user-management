@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.0.3](https://github.com/OleksaDid/backoffice-user-management/compare/v1.0.2...v1.0.3) (2026-11-28)
+
+
+### Bug Fixes
+
+* answer the session probe with nulls instead of 401 ([#35](https://github.com/OleksaDid/backoffice-user-management/issues/35)) ([5aa111b](https://github.com/OleksaDid/backoffice-user-management/commit/5aa111b74c65462b36b226f3fdd8d2d129311203))
+* **api:** answer the session probe with nulls instead of 401 ([ca9741e](https://github.com/OleksaDid/backoffice-user-management/commit/ca9741edea1af3b7a0c419f02a7da3c6c721ee3b))
+* **web:** read the signed-out state from the session probe body ([7428704](https://github.com/OleksaDid/backoffice-user-management/commit/7428704ad692f0c88357ed1e1eb78a973dd32416))
+* **web:** stop zod from probing for eval under the CSP ([6430a2b](https://github.com/OleksaDid/backoffice-user-management/commit/6430a2b3d2fa83342749c5e9b8618530d68581e3))
+
+
+### Documentation
+
+* record why the session probe answers nulls ([d5ccd2e](https://github.com/OleksaDid/backoffice-user-management/commit/d5ccd2ea3152e5b60a2509bbf012f6e518daa94f))
+
+
+### Tests
+
+* **e2e:** check that a first visit logs no console errors ([c343abd](https://github.com/OleksaDid/backoffice-user-management/commit/c343abd6304f2a60371378d81d642d09825e8f2d))
+
 ## [1.0.2](https://github.com/OleksaDid/backoffice-user-management/compare/v1.0.1...v1.0.2) (2026-11-28)
 
 
