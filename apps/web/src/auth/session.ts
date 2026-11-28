@@ -1,4 +1,4 @@
-import type { AuthResponse, MeResponse } from '@backoffice/contracts';
+import type { AuthResponse, SignedIn } from '@backoffice/contracts';
 import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { authApi } from '../api/auth';
@@ -43,7 +43,7 @@ export function useStoreSession() {
   const queryClient = useQueryClient();
   return ({ user, session: { id: _credential, ...session } }: AuthResponse) => {
     queryClient.removeQueries({ queryKey: endReasonQueryKey });
-    queryClient.setQueryData<MeResponse>(sessionQueryKey, { user, session });
+    queryClient.setQueryData<SignedIn>(sessionQueryKey, { user, session });
   };
 }
 
