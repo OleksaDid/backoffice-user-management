@@ -103,8 +103,9 @@ Patterns worth pointing out:
 
 ## API
 
-All endpoints are under `/api`. Everything except authentication, health and docs requires the
-session cookie set by sign-up or sign-in. Errors are RFC 9457 problem details with a stable `code`
+All endpoints are under `/api`. Everything except authentication (including `/auth/me`, which
+answers `null`s without a session), health and docs requires the session cookie set by sign-up or
+sign-in. Errors are RFC 9457 problem details with a stable `code`
 ([catalog](docs/spec/05-errors.md)).
 
 | Method | Path                            | Purpose                                                    | Spec                |
@@ -112,7 +113,7 @@ session cookie set by sign-up or sign-in. Errors are RFC 9457 problem details wi
 | POST   | `/auth/sign-up`                 | Register, start a session, set the cookie                  | AUTH-01, 02         |
 | POST   | `/auth/sign-in`                 | Sign in, start a session, set the cookie                   | AUTH-03 to 05       |
 | POST   | `/auth/sign-out`                | End the current session, clear the cookie                  | AUTH-06             |
-| GET    | `/auth/me`                      | Current user and session                                   | AUTH-07             |
+| GET    | `/auth/me`                      | Current user and session, or `null`s                       | AUTH-07             |
 | GET    | `/users?page&pageSize`          | List users, newest first (default 6 per page)              | USR-03 to 06        |
 | POST   | `/users`                        | Create a user with an initial password                     | USR-01, AUTH-12     |
 | PATCH  | `/users/:id`                    | Update first and last name (locked while inactive)         | USR-07 to 09        |

@@ -48,8 +48,8 @@ Requirements: 124. With at least one test: 115.
 | AUTH-04 | 2 | 2 |  |  |
 | AUTH-05 |  | 1 |  |  |
 | AUTH-06 |  | 1 |  |  |
-| AUTH-07 |  | 1 |  |  |
-| AUTH-08 |  | 5 |  |  |
+| AUTH-07 |  | 3 |  | 1 |
+| AUTH-08 |  | 4 |  |  |
 | AUTH-09 |  | 2 |  |  |
 | AUTH-20 | 1 | 1 |  |  |
 | AUTH-21 | 5 |  |  |  |

@@ -11,6 +11,19 @@ test.describe('authentication @full', () => {
     await expectNoA11yViolations(page);
   });
 
+  test('AUTH-07 a first visit logs no errors in the console', async ({ page }) => {
+    const problems: string[] = [];
+    page.on('console', (message) => {
+      if (message.type() === 'error') problems.push(message.text());
+    });
+    page.on('response', (response) => {
+      if (response.status() >= 400) problems.push(`${response.status()} ${response.url()}`);
+    });
+    await page.goto('/');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Create your account');
+    expect(problems).toEqual([]);
+  });
+
   test('buttons show the pointer cursor', async ({ page }) => {
     await page.goto('/sign-up');
     const cursor = await page
