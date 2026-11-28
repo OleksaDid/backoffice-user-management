@@ -44,7 +44,14 @@ export type SignUpForm = z.input<typeof signUpFormSchema>;
  * injected script read the credential that HttpOnly hides (ADR 0005).
  */
 export const currentSessionSchema = sessionSchema.omit({ id: true });
+export const signedInSchema = z.object({ user: userSchema, session: currentSessionSchema });
+export type SignedIn = z.infer<typeof signedInSchema>;
+
+/**
+ * AUTH-07: "who am I" always answers 200; `null`s mean nobody is signed in. A 401 here
+ * would only put a red error in every visitor's console on the first page load.
+ */
 export const meResponseSchema = z
-  .object({ user: userSchema, session: currentSessionSchema })
+  .union([signedInSchema, z.object({ user: z.null(), session: z.null() })])
   .meta({ id: 'MeResponse' });
 export type MeResponse = z.infer<typeof meResponseSchema>;

@@ -168,6 +168,9 @@ describe('sessions API (integration)', () => {
 
     expect(response.statusCode).toBe(204);
     expect(response.cookies.find((c) => c.name === 'sid')?.value).toBe('');
-    expect((await ctx.inject({ url: '/api/auth/me' })).statusCode).toBe(401);
+    expect((await ctx.inject({ url: '/api/auth/me' })).json()).toEqual({
+      user: null,
+      session: null,
+    });
   });
 });

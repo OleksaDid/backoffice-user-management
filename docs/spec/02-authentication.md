@@ -36,9 +36,12 @@ browser sends it with every further request and page scripts cannot read it.
 
 - **AUTH-06** `POST /api/auth/sign-out` terminates the current session (SES-04), clears the cookie
   and returns `204`. Without a valid session it still clears the cookie and returns `204`.
-- **AUTH-07** `GET /api/auth/me` returns `200` with `{ user, session }` for an active session. The
-  session object omits its `id`: the id is the cookie value and must not be readable by scripts.
-- **AUTH-08** Every endpoint except sign-up, sign-in, sign-out, health and API docs requires an
+- **AUTH-07** `GET /api/auth/me` returns `200` with `{ user, session }` for an active session, and
+  `200` with `{ "user": null, "session": null }` when there is none (a 401 would show as an error in
+  every visitor's console on the first page load); a cookie that no longer opens a session is
+  cleared. The session object omits its `id`: the id is the cookie value and must not be readable
+  by scripts.
+- **AUTH-08** Every endpoint except sign-up, sign-in, sign-out, me, health and API docs requires an
   active session. A missing, unknown, terminated or expired session returns `401 UNAUTHENTICATED`.
 - **AUTH-09** `POST /api/sessions` (SES-01) is removed: creating a session for an arbitrary user id
   would let any signed-in user impersonate another. `DELETE /api/sessions/:id` remains, requires
