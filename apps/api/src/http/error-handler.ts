@@ -26,6 +26,24 @@ function toFieldErrors(
   });
 }
 
+/** Connection-level database failures (refused, timed out, server shutting down). */
+function isDatabaseUnavailable(error: unknown): boolean {
+  let current: unknown = error;
+  for (let depth = 0; depth < 5 && current; depth++) {
+    const { code, message } = current as { code?: unknown; message?: unknown };
+    if (
+      (typeof code === 'string' &&
+        (['ECONNREFUSED', 'ETIMEDOUT', 'ENOTFOUND', '57P01', '57P03'].includes(code) ||
+          code.startsWith('08'))) ||
+      (typeof message === 'string' && message.includes('timeout exceeded when trying to connect'))
+    ) {
+      return true;
+    }
+    current = (current as { cause?: unknown }).cause;
+  }
+  return false;
+}
+
 /** Maps anything thrown inside a request to an AppError (ERR-11). */
 export function toAppError(error: unknown): AppError {
   if (isAppError(error)) {
@@ -41,7 +59,16 @@ export function toAppError(error: unknown): AppError {
   if (statusCode === 429) {
     return new AppError('RATE_LIMITED', { cause: error });
   }
-  // Framework client errors: malformed JSON, unsupported media type, body too large.
+  if (statusCode === 413) {
+    return new AppError('PAYLOAD_TOO_LARGE', { cause: error });
+  }
+  if (statusCode === 415) {
+    return new AppError('UNSUPPORTED_MEDIA_TYPE', { cause: error });
+  }
+  if (isDatabaseUnavailable(error)) {
+    return new AppError('SERVICE_UNAVAILABLE', { cause: error });
+  }
+  // Other framework client errors, e.g. malformed JSON.
   if (statusCode !== undefined && statusCode >= 400 && statusCode < 500) {
     return new AppError('VALIDATION_FAILED', {
       detail: (error as FastifyError).message,
@@ -58,6 +85,8 @@ function contextOf(request: FastifyRequest) {
     requestId: request.id,
     method: request.method,
     route: request.routeOptions.url ?? request.url,
+    // ERR-12: who was affected, when the request was authenticated.
+    ...(request.auth ? { userId: request.auth.user.id } : {}),
   };
 }
 
@@ -68,7 +97,12 @@ function contextOf(request: FastifyRequest) {
 export function registerErrorHandling(app: App, reporter: ErrorReporter): void {
   app.setErrorHandler((error, request, reply) => {
     const appError = toAppError(error);
-    reporter.report(appError.code === 'INTERNAL_ERROR' ? error : appError, contextOf(request));
+    reporter.report(
+      appError.code === 'INTERNAL_ERROR' || appError.code === 'SERVICE_UNAVAILABLE'
+        ? error
+        : appError,
+      contextOf(request),
+    );
     return sendProblem(reply, appError);
   });
 

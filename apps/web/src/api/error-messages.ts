@@ -15,6 +15,8 @@ const MESSAGES: Record<ErrorCode, string> = {
   EMAIL_ALREADY_REGISTERED: 'An account with this email already exists.',
   USER_NAME_LOCKED: 'Activate the user before changing their name.',
   SELF_MODIFICATION_FORBIDDEN: 'You cannot deactivate or delete your own account.',
+  PAYLOAD_TOO_LARGE: 'The submitted data is too large.',
+  UNSUPPORTED_MEDIA_TYPE: 'Something went wrong. Please try again.',
   RATE_LIMITED: 'Too many attempts. Wait a minute and try again.',
   INTERNAL_ERROR: 'Something went wrong on our side. Please try again.',
   SERVICE_UNAVAILABLE: 'The service is temporarily unavailable. Please try again shortly.',

@@ -49,6 +49,7 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ${{ env.IMAGE_PREFIX }}-${{ matrix.app }}:${{ steps.tag.outputs.tag }}
+          build-args: REVISION=${{ github.sha }}
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
@@ -63,6 +64,7 @@ jobs:
     with:
       environment: staging
       tag: ${{ needs.publish.outputs.tag }}
+      revision: ${{ github.sha }}
       url: https://test-staging.oleksa.live
     secrets: inherit
 
@@ -104,11 +106,20 @@ jobs:
       contents: write
       pull-requests: write
     steps:
+      # Without the token a release would be created but never deployed; fail loudly instead.
+      - name: Require the release token
+        env:
+          RELEASE_PLEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+        run: |
+          if [ -z "$RELEASE_PLEASE_TOKEN" ]; then
+            echo "::error::Repository secret RELEASE_PLEASE_TOKEN is missing (see deploy/README.md)"
+            exit 1
+          fi
       - id: release
         uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         with:
           # A token other than GITHUB_TOKEN, so that the release PR triggers CI and the
           # published release triggers release.yml (events from GITHUB_TOKEN do not).
-          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json

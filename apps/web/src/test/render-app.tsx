@@ -41,7 +41,10 @@ export function problem(status: number, code: string, extra: Record<string, unkn
 export function mockSession(auth: AuthResponse | null) {
   server.use(
     http.get('/api/auth/me', () =>
-      auth ? HttpResponse.json(auth) : problem(401, 'UNAUTHENTICATED'),
+      // Like the API (AUTH-07), /auth/me never includes the session id.
+      auth
+        ? HttpResponse.json({ user: auth.user, session: { ...auth.session, id: undefined } })
+        : problem(401, 'UNAUTHENTICATED'),
     ),
   );
 }

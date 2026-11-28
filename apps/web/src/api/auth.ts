@@ -1,4 +1,4 @@
-import type { AuthResponse, SignInBody, SignUpBody } from '@backoffice/contracts';
+import type { AuthResponse, MeResponse, SignInBody, SignUpBody } from '@backoffice/contracts';
 
 import { apiRequest } from './client';
 import { isApiError } from './errors';
@@ -8,9 +8,9 @@ export const authApi = {
   signIn: (body: SignInBody) => apiRequest<AuthResponse>('POST', '/auth/sign-in', body),
   signOut: () => apiRequest<undefined>('POST', '/auth/sign-out'),
   /** UI-AUTH-01: the current session, or null when there is none (401 is not an error here). */
-  async me(): Promise<AuthResponse | null> {
+  async me(): Promise<MeResponse | null> {
     try {
-      return await apiRequest<AuthResponse>('GET', '/auth/me');
+      return await apiRequest<MeResponse>('GET', '/auth/me');
     } catch (error) {
       if (isApiError(error, 'UNAUTHENTICATED')) {
         return null;

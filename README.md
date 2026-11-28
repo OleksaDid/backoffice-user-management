@@ -137,7 +137,10 @@ account or cross-site request, `404` unknown resource, `409` conflict with the c
 ```bash
 npm test                    # unit, integration (needs Docker) and component tests
 npm run test:coverage       # the same with coverage thresholds (90% lines/functions/statements, 85% branches)
-docker compose up --build && npm run e2e    # e2e against the local stack
+# e2e against the local stack: start it in the background with a higher auth rate limit
+# (the suite signs up many users from one IP), wait until it is healthy, then run
+AUTH_RATE_LIMIT_PER_MINUTE=1000 docker compose up --build --detach --wait
+npm run e2e                                 # Chromium, Firefox and WebKit
 E2E_BROWSERS=chromium npm run e2e           # one browser for a quick run
 npm run traceability        # regenerate docs/traceability.md
 ```
@@ -240,6 +243,14 @@ stated assumptions until answered.
 - **Rate limiting is in memory**, per API instance; several instances would need a shared store.
 - **Expired and terminated sessions are kept** without a cleanup job.
 - **Theme preference is per browser**, not stored on the account.
+- **Migrations are safe at this data size, not online-safe at any size**: the unique email index is
+  built without `CONCURRENTLY` and the contract step backfills and sets `NOT NULL` in one
+  transaction. For a large table the same change would use a concurrent index build in its own
+  migration and a `NOT VALID` check constraint validated before `SET NOT NULL`.
+- **The client IP comes from `CF-Connecting-IP`**, which is trustworthy only because the web server
+  is reachable solely through the Cloudflare tunnel; on the local stack it can be spoofed.
+- **Base images are pinned by tag, not digest** (GitHub Actions are pinned by commit SHA);
+  Dependabot proposes base image updates.
 - **Public demo**: anyone can sign up and change data; it is reset nightly. e2e runs on staging
   create `e2e-…@example.com` users until the next reset.
 - The main JavaScript bundle (Mantine and the forms) is about 190 kB gzipped; the dashboard is a

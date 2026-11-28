@@ -1,4 +1,4 @@
-import type { AuthResponse } from '@backoffice/contracts';
+import type { AuthResponse, MeResponse } from '@backoffice/contracts';
 import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { authApi } from '../api/auth';
@@ -35,12 +35,15 @@ export function endSession(queryClient: QueryClient, reason: SessionEndReason): 
   queryClient.setQueryData(sessionQueryKey, null);
 }
 
-/** After sign-in or sign-up: remember the session without another round trip. */
+/**
+ * After sign-in or sign-up: remember the session without another round trip. The session
+ * id from the response is dropped; the app never keeps the credential (ADR 0005).
+ */
 export function useStoreSession() {
   const queryClient = useQueryClient();
-  return (auth: AuthResponse) => {
+  return ({ user, session: { id: _credential, ...session } }: AuthResponse) => {
     queryClient.removeQueries({ queryKey: endReasonQueryKey });
-    queryClient.setQueryData(sessionQueryKey, auth);
+    queryClient.setQueryData<MeResponse>(sessionQueryKey, { user, session });
   };
 }
 

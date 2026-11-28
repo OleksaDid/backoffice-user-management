@@ -22,7 +22,7 @@ Requirements: 124. With at least one test: 115.
 | USR-08 | 1 | 1 |  |  |
 | USR-09 | 1 | 1 |  |  |
 | USR-10 | 2 | 1 |  |  |
-| USR-11 | 1 | 1 |  |  |
+| USR-11 | 1 | 2 |  |  |
 | USR-12 | 3 | 1 |  |  |
 | USR-13 |  | 1 |  |  |
 | USR-14 |  | 1 |  |  |
@@ -30,7 +30,7 @@ Requirements: 124. With at least one test: 115.
 | SES-02 | 1 | 1 |  |  |
 | SES-03 |  | 1 |  |  |
 | SES-04 |  | 1 |  |  |
-| SES-05 |  | 2 |  |  |
+| SES-05 |  | 3 |  |  |
 | SES-06 |  | 1 |  |  |
 | HLT-01 | 4 | 2 |  |  |
 | API-01 | 1 |  |  |  |
@@ -49,9 +49,9 @@ Requirements: 124. With at least one test: 115.
 | AUTH-05 |  | 1 |  |  |
 | AUTH-06 |  | 1 |  |  |
 | AUTH-07 |  | 1 |  |  |
-| AUTH-08 |  | 4 |  |  |
+| AUTH-08 |  | 5 |  |  |
 | AUTH-09 |  | 2 |  |  |
-| AUTH-20 |  | 1 |  |  |
+| AUTH-20 | 1 | 1 |  |  |
 | AUTH-21 | 5 |  |  |  |
 | AUTH-22 |  | 1 |  |  |
 | AUTH-23 |  | 1 |  |  |
@@ -116,7 +116,7 @@ Requirements: 124. With at least one test: 115.
 | ERR-01 | 4 |  |  |  |
 | ERR-02 | 2 |  |  |  |
 | ERR-10 | 2 |  |  |  |
-| ERR-11 | 4 |  |  |  |
+| ERR-11 | 6 |  |  |  |
 | ERR-12 | 4 |  |  |  |
 | ERR-13 |  |  |  |  |
 | ERR-14 | 1 |  |  |  |

@@ -62,7 +62,14 @@ export class SessionRepository {
     const rows = await this.db
       .update(sessions)
       .set({ terminatedAt: now })
-      .where(and(eq(sessions.userId, userId), isNull(sessions.terminatedAt)))
+      // Only active sessions: expired ones keep their record unchanged (SES-05).
+      .where(
+        and(
+          eq(sessions.userId, userId),
+          isNull(sessions.terminatedAt),
+          gt(sessions.expiresAt, now),
+        ),
+      )
       .returning({ id: sessions.id });
     return rows.length;
   }

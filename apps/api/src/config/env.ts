@@ -25,6 +25,8 @@ export const envSchema = z.object({
   PUBLIC_ORIGIN: z.url().optional(),
   /** AUTH-20: send the session cookie only over HTTPS. Disable only for plain-HTTP local runs. */
   COOKIE_SECURE: booleanString.default(true),
+  /** Git commit of the running image (set at build time); lets deployments verify rollout. */
+  APP_REVISION: z.string().min(1).default('dev'),
   /** AUTH-40: sign-in and sign-up attempts per client IP and minute. */
   AUTH_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(1).max(10_000).default(10),
   /** Absolute session lifetime (spec 01, Session). */
@@ -57,8 +59,15 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     );
   }
   const { PUBLIC_ORIGIN, ...rest } = result.data;
-  if (!PUBLIC_ORIGIN && rest.NODE_ENV === 'production') {
-    throw new ConfigError(['PUBLIC_ORIGIN: required in production']);
+  if (rest.NODE_ENV === 'production') {
+    const problems = [
+      ...(PUBLIC_ORIGIN ? [] : ['PUBLIC_ORIGIN: required in production']),
+      // AUTH-20: Secure may be disabled only for local plain-HTTP development.
+      ...(rest.COOKIE_SECURE ? [] : ['COOKIE_SECURE: must be true in production']),
+    ];
+    if (problems.length > 0) {
+      throw new ConfigError(problems);
+    }
   }
   // Origins never end with a slash; normalise so the comparison is exact.
   return { ...rest, PUBLIC_ORIGIN: new URL(PUBLIC_ORIGIN ?? DEFAULT_PUBLIC_ORIGIN).origin };

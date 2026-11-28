@@ -48,6 +48,7 @@ Values are not listed on purpose; secrets are generated on the server.
 | `PUBLIC_ORIGIN`              | from `v0.3.0` | Public origin; state-changing requests from other origins are rejected (CSRF) | `https://test.oleksa.live`              |
 | `AUTH_RATE_LIMIT_PER_MINUTE` | no            | Sign-in and sign-up attempts per client IP and minute                         | integer, default `10`                   |
 | `COOKIE_SECURE`              | no            | Send the session cookie only over HTTPS; keep the default on servers          | `true` (default) or `false`             |
+| `APP_REVISION`               | no            | Git commit of the image, reported by `/api/health/live`; set at build time    | set in the image                        |
 | `TRUST_PROXY_HOPS`           | no            | Proxies whose `X-Forwarded-*` headers are trusted (`web` = 1)                 | integer, default `0`; template sets `1` |
 | `NODE_ENV`                   | no            | Runtime mode                                                                  | `production` (set in the image)         |
 | `LOG_LEVEL`                  | no            | Log verbosity                                                                 | `info` (default), `warn`, `debug`, ...  |
@@ -104,7 +105,8 @@ Chain: Cloudflare edge → cloudflared → `web` (:8080, HTTP) → `api` (:3000)
 
 - `web` passes `Host` and `X-Forwarded-Proto` through unchanged and sets `X-Forwarded-For` /
   `X-Real-IP` from `CF-Connecting-IP` (overwriting any client-supplied value). The API trusts one
-  proxy hop.
+  proxy hop. This is only safe because `web` is reachable solely through the tunnel: anything that
+  can reach `web:8080` directly could set `CF-Connecting-IP` and bypass the per-IP rate limit.
 - `/api/*` responses carry `Cache-Control: no-store`. `index.html` is `no-cache`; hashed files
   under `/assets/` are cached for a year.
 - The SPA is served with a Content-Security-Policy without inline scripts, `frame-ancestors 'none'`

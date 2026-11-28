@@ -15,6 +15,10 @@ committed, forward-only SQL migration, applied automatically before the API star
 - **DATA-02** Schema changes follow **expand → migrate → contract**: a release only adds what the
   previous release can ignore, and constraints are tightened in a later release once data complies.
   Each release can roll out with zero downtime and be rolled back to the previous application image.
+  At this project's data size the steps are written plainly (index built in the migration
+  transaction, backfill and `NOT NULL` together). For a large table the same change would build
+  the index `CONCURRENTLY` in its own migration and add a `NOT VALID` check constraint, validate
+  it, and only then set `NOT NULL`, to avoid long locks.
 - **DATA-03** Migrations run as a one-off step before the API starts (`migrate` service in Compose,
   the same step in deployments). The API never alters the schema at runtime.
 

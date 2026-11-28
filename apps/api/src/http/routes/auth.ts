@@ -1,5 +1,6 @@
 import {
   authResponseSchema,
+  meResponseSchema,
   problemDetailsSchema,
   signInBodySchema,
   signUpBodySchema,
@@ -98,14 +99,18 @@ export const authRoutes =
     app.get(
       '/auth/me',
       {
-        preValidation: requireAuth(auth),
+        onRequest: requireAuth(auth),
         schema: {
           tags,
           summary: 'The signed-in user and their session',
-          response: { 200: authResponseSchema, 401: problem },
+          response: { 200: meResponseSchema, 401: problem },
         },
       },
-      (request) => toAuthResponse(authOf(request)),
+      (request) => {
+        const { user, session } = authOf(request);
+        const { id: _credential, ...currentSession } = toSessionDto(session);
+        return { user: toUserDto(user), session: currentSession };
+      },
     );
 
     done();

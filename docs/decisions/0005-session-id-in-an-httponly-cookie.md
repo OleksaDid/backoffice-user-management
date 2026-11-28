@@ -24,7 +24,10 @@ describe. CSRF is covered by `SameSite=Strict`, a same-origin deployment (the we
 
 ## Consequences
 
-- Script injection cannot steal the session id.
+- Script injection cannot read the cookie. The id is exposed only in the sign-up and sign-in
+  responses (AUTH-22); `GET /api/auth/me` deliberately omits it, otherwise any injected script
+  could fetch it (found in review). A remaining window is an injected script that observes the
+  sign-in response itself; tokens separate from the session id would close it.
 - The web app learns whether a session is active from `GET /api/auth/me`.
 - The session id doubles as the database key, so a database leak would expose live sessions.
   Storing only a hash of a separate random token is listed as a future improvement.

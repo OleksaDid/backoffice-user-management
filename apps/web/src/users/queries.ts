@@ -1,5 +1,5 @@
 import {
-  type AuthResponse,
+  type MeResponse,
   DEFAULT_PAGE_SIZE,
   type UpdateUserProfileBody,
   type UserStatus,
@@ -43,7 +43,7 @@ export function useUpdateProfile() {
     onSettled: async (_data, _error, { id }) => {
       await refresh();
       // Only your own name appears in the greeting.
-      if (queryClient.getQueryData<AuthResponse | null>(sessionQueryKey)?.user.id === id) {
+      if (queryClient.getQueryData<MeResponse | null>(sessionQueryKey)?.user.id === id) {
         await queryClient.invalidateQueries({ queryKey: sessionQueryKey });
       }
     },

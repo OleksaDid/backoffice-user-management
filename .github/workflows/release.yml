@@ -51,5 +51,6 @@ jobs:
     with:
       environment: production
       tag: ${{ needs.promote.outputs.tag }}
+      revision: ${{ github.sha }}
       url: https://test.oleksa.live
     secrets: inherit

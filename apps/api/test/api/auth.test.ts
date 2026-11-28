@@ -135,13 +135,15 @@ describe('authentication API (integration)', () => {
     expect(anonymous.statusCode).toBe(204);
   });
 
-  it('AUTH-07 me returns the signed-in user and session', async () => {
+  it('AUTH-07 me returns the signed-in user and session, but never the session id', async () => {
     const signedUp = (await signUp()).json<AuthResponse>();
 
     const response = await me(signedUp.session.id);
 
     expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual(signedUp);
+    const { id: _id, ...sessionWithoutId } = signedUp.session;
+    expect(response.json()).toEqual({ user: signedUp.user, session: sessionWithoutId });
+    expect(response.body).not.toContain(signedUp.session.id);
   });
 
   it('AUTH-08 me without, with an unknown, a malformed or an expired session is 401', async () => {

@@ -39,6 +39,7 @@ export interface AppDependencies {
     | 'COOKIE_SECURE'
     | 'PUBLIC_ORIGIN'
     | 'AUTH_RATE_LIMIT_PER_MINUTE'
+    | 'APP_REVISION'
   >;
   logger: Logger;
   errorReporter: ErrorReporter;
@@ -115,7 +116,9 @@ export async function buildApp(deps: AppDependencies): Promise<App> {
   });
   await app.register(swaggerUi, { routePrefix: `${API_PREFIX}/docs` });
 
-  await app.register(healthRoutes(deps.readinessProbe), { prefix: API_PREFIX });
+  await app.register(healthRoutes(deps.readinessProbe, deps.config.APP_REVISION), {
+    prefix: API_PREFIX,
+  });
   const cookies = { secure: deps.config.COOKIE_SECURE };
   const { auth, users, sessions } = deps.services;
   await app.register(

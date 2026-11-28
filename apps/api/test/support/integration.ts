@@ -81,6 +81,7 @@ export function useIntegrationApp(
         COOKIE_SECURE: true,
         PUBLIC_ORIGIN: TEST_ORIGIN,
         AUTH_RATE_LIMIT_PER_MINUTE: options.authRateLimit ?? 1000,
+        APP_REVISION: 'test-revision',
       },
       clock,
       logger,

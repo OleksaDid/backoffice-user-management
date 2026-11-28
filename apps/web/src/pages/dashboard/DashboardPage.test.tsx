@@ -194,23 +194,27 @@ describe('dashboard: create, edit, status, delete', () => {
     const api = fakeUsersApi([makeUser({ firstName: 'Grace', lastName: 'Hopper' })]);
     const { user } = await openDashboard();
 
-    const toggle = screen.getByRole('switch', { name: /: Grace Hopper$/ });
+    const toggle = screen.getByRole('switch', { name: 'Active: Grace Hopper' });
     expect(toggle).toBeChecked();
     await user.click(toggle);
 
     expect(await screen.findByText('Grace Hopper is now inactive.')).toBeVisible();
     await waitFor(() => {
-      expect(screen.getByRole('switch', { name: /: Grace Hopper$/ })).not.toBeChecked();
+      expect(screen.getByRole('switch', { name: 'Active: Grace Hopper' })).not.toBeChecked();
     });
     const statusCall = api.calls.find((call) => call.method === 'PUT');
     expect(statusCall).toMatchObject({ body: { status: 'inactive' } });
   });
 
-  it('DASH-41 the own status switch and delete action are disabled', async () => {
+  it('DASH-41 the own status switch is disabled and the own Delete does nothing', async () => {
     fakeUsersApi();
-    await openDashboard();
-    expect(screen.getByRole('switch', { name: /: Ada Lovelace$/ })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Delete Ada Lovelace' })).toBeDisabled();
+    const { user } = await openDashboard();
+    expect(screen.getByRole('switch', { name: 'Active: Ada Lovelace' })).toBeDisabled();
+
+    const ownDelete = screen.getByRole('button', { name: 'Delete Ada Lovelace' });
+    expect(ownDelete).toHaveAttribute('aria-disabled', 'true');
+    await user.click(ownDelete);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   it('DASH-42 a failed status change keeps the switch and announces the error', async () => {
@@ -218,10 +222,10 @@ describe('dashboard: create, edit, status, delete', () => {
     api.failNext('PUT', () => problem(500, 'INTERNAL_ERROR'));
     const { user } = await openDashboard();
 
-    await user.click(screen.getByRole('switch', { name: /: Grace Hopper$/ }));
+    await user.click(screen.getByRole('switch', { name: 'Active: Grace Hopper' }));
 
     expect(await screen.findByText(/Something went wrong on our side/)).toBeVisible();
-    expect(screen.getByRole('switch', { name: /: Grace Hopper$/ })).toBeChecked();
+    expect(screen.getByRole('switch', { name: 'Active: Grace Hopper' })).toBeChecked();
   });
 
   it('DASH-50 DASH-51 deletes after a confirmation that names the user', async () => {
@@ -292,12 +296,13 @@ describe('dashboard: stale data after concurrent changes', () => {
     expect(router.state.location.search).toBe('?page=3');
   });
 
-  it('DASH-41 the explanation for the disabled own Delete reaches assistive technology', async () => {
+  it('DASH-41 the own Delete stays focusable and explains itself to assistive technology', async () => {
     fakeUsersApi();
     await openDashboard();
-    expect(screen.getByRole('button', { name: 'Delete Ada Lovelace' })).toHaveAccessibleDescription(
-      'You cannot delete your own account',
-    );
+    const ownDelete = screen.getByRole('button', { name: 'Delete Ada Lovelace' });
+    ownDelete.focus();
+    expect(ownDelete).toHaveFocus();
+    expect(ownDelete).toHaveAccessibleDescription('You cannot delete your own account');
   });
 });
 
@@ -311,7 +316,7 @@ describe('dashboard: review follow-ups', () => {
     );
 
     // A successful change triggers a refresh, which fails.
-    await user.click(screen.getByRole('switch', { name: /: Grace Hopper$/ }));
+    await user.click(screen.getByRole('switch', { name: 'Active: Grace Hopper' }));
 
     expect(await screen.findByText('The list may be out of date')).toBeVisible();
     expect(screen.getByRole('rowheader', { name: 'Grace Hopper' })).toBeVisible();
@@ -324,16 +329,17 @@ describe('dashboard: review follow-ups', () => {
     expect(api.users).toHaveLength(2);
   });
 
-  it('DASH-40 the switch name starts with its visible label (WCAG 2.5.3)', async () => {
+  it('DASH-40 the switch keeps a stable name that contains its visible label; state is on/off', async () => {
     fakeUsersApi([makeUser({ firstName: 'Grace', lastName: 'Hopper' })]);
     const { user } = await openDashboard();
 
     const toggle = screen.getByRole('switch', { name: 'Active: Grace Hopper' });
-    expect(toggle.closest('label') ?? document.body).toHaveTextContent('Active');
+    expect(toggle).toBeChecked();
     await user.click(toggle);
 
-    expect(await screen.findByRole('switch', { name: 'Inactive: Grace Hopper' })).not.toBeChecked();
-    expect(screen.getByText('Inactive')).toBeVisible();
+    await waitFor(() => {
+      expect(screen.getByRole('switch', { name: 'Active: Grace Hopper' })).not.toBeChecked();
+    });
   });
 
   it('DASH-62 refreshes the greeting only after editing your own name', async () => {

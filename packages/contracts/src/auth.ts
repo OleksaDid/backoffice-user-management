@@ -37,3 +37,14 @@ export const signUpFormSchema = signUpBodySchema
     path: ['confirmPassword'],
   });
 export type SignUpForm = z.input<typeof signUpFormSchema>;
+
+/**
+ * AUTH-07: the current user and session *without* the session id. The id is the cookie
+ * value; returning it from an endpoint any script on the origin can call would let an
+ * injected script read the credential that HttpOnly hides (ADR 0005).
+ */
+export const currentSessionSchema = sessionSchema.omit({ id: true });
+export const meResponseSchema = z
+  .object({ user: userSchema, session: currentSessionSchema })
+  .meta({ id: 'MeResponse' });
+export type MeResponse = z.infer<typeof meResponseSchema>;

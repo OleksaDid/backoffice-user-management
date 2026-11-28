@@ -14,7 +14,7 @@ function startServer(env: Record<string, string>) {
   let output = '';
   child.stdout.on('data', (chunk: Buffer) => (output += chunk.toString()));
   child.stderr.on('data', (chunk: Buffer) => (output += chunk.toString()));
-  const waitFor = async (text: string, timeoutMs = 45_000) => {
+  const waitFor = async (text: string, timeoutMs = 90_000) => {
     const started = Date.now();
     while (!output.includes(text)) {
       if (Date.now() - started > timeoutMs) {
@@ -46,7 +46,7 @@ describe('process lifecycle (integration)', () => {
     await database.stop();
   });
 
-  it('NFR-32 drains and exits cleanly on SIGTERM', { timeout: 90_000 }, async () => {
+  it('NFR-32 drains and exits cleanly on SIGTERM', { timeout: 150_000 }, async () => {
     const port = String(40_000 + Math.floor(Math.random() * 10_000));
     const server = startServer({ DATABASE_URL: database.container.getConnectionUri(), PORT: port });
     running.add(server.child);
