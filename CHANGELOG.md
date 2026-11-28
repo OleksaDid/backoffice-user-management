@@ -1,5 +1,35 @@
 # Changelog
 
+## [1.0.2](https://github.com/OleksaDid/backoffice-user-management/compare/v1.0.1...v1.0.2) (2026-11-28)
+
+
+### Bug Fixes
+
+* address the full review (session id exposure, a11y, delivery checks) ([#33](https://github.com/OleksaDid/backoffice-user-management/issues/33)) ([fc7f801](https://github.com/OleksaDid/backoffice-user-management/commit/fc7f801f5a0a5c6d721aeffda3550d7fdbafd087))
+* **api:** give oversized bodies, wrong media types and an unreachable database their own errors ([ac6b674](https://github.com/OleksaDid/backoffice-user-management/commit/ac6b674e40ec53b98bd5aeac30c2da71e5743f62))
+* **api:** stop returning the session id from /auth/me ([b414424](https://github.com/OleksaDid/backoffice-user-management/commit/b414424ff3af8474497361ee51b05861cd345c79))
+* **api:** tighten authentication order, cookie config and session termination ([a164817](https://github.com/OleksaDid/backoffice-user-management/commit/a16481737e3d85adb7c078de4314785fcc42a12c))
+* **docker:** do not cache 404s for missing assets for a year ([1653649](https://github.com/OleksaDid/backoffice-user-management/commit/1653649882961585439f710d19f11ee7d787c34d))
+* **web:** keep the own Delete button focusable so its explanation is reachable ([077c86d](https://github.com/OleksaDid/backoffice-user-management/commit/077c86d015d9f0a12014767416864ed5a4f8c020))
+* **web:** leave initial focus alone and keep the header on one line ([89b6669](https://github.com/OleksaDid/backoffice-user-management/commit/89b6669a0577d384d3115f0e5a8947b4522e3112))
+* **web:** never lose status-change notifications; give the switch a stable name ([7a594df](https://github.com/OleksaDid/backoffice-user-management/commit/7a594df041ab8510ee246bd740ff7bde3aad358e))
+
+
+### Documentation
+
+* correct the local e2e command and state the remaining limitations ([e9f3fc9](https://github.com/OleksaDid/backoffice-user-management/commit/e9f3fc9e9c0a49754c31ba8780f73c1a570bd0b5))
+
+
+### Build and Deployment
+
+* verify the deployed revision and fail without the release token ([08f8dd1](https://github.com/OleksaDid/backoffice-user-management/commit/08f8dd194ee4b94bdbe5816bea691555a67fb24f))
+
+
+### Tests
+
+* **api:** give the real-process lifecycle test more startup headroom ([a5e7622](https://github.com/OleksaDid/backoffice-user-management/commit/a5e7622547b1c268d7e998b2f4f3a4e4dec0453c))
+* **web:** update dashboard tests and make the theme script test path-independent ([85406c8](https://github.com/OleksaDid/backoffice-user-management/commit/85406c8085e9a04f59830b83c3e22745fc1e38bf))
+
 ## [1.0.1](https://github.com/OleksaDid/backoffice-user-management/compare/v1.0.0...v1.0.1) (2026-11-27)
 
 
