@@ -1,3 +1,6 @@
+// Must run before any schema parses (see the module).
+import './infra/zod-config';
+
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router';

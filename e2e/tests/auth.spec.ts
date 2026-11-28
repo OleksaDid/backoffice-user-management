@@ -11,7 +11,7 @@ test.describe('authentication @full', () => {
     await expectNoA11yViolations(page);
   });
 
-  test('AUTH-07 a first visit logs no errors in the console', async ({ page }) => {
+  test('AUTH-07 NFR-12 a first visit logs no errors in the console', async ({ page }) => {
     const problems: string[] = [];
     page.on('console', (message) => {
       if (message.type() === 'error') problems.push(message.text());

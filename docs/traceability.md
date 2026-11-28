@@ -144,7 +144,7 @@ Requirements: 124. With at least one test: 115.
 | NFR-02 |  |  |  |  |
 | NFR-10 | 2 |  |  |  |
 | NFR-11 | 1 | 1 |  |  |
-| NFR-12 | 1 |  |  | 1 |
+| NFR-12 | 1 |  | 1 | 2 |
 | NFR-13 |  | 1 |  |  |
 | NFR-14 |  | 1 |  |  |
 | NFR-15 | 4 | 1 |  |  |
